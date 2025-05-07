@@ -1,14 +1,14 @@
 const { getByChatGpt4o } = require("../Chatgpt/Base");
 
-async function opcionPrincipio(mensajeCliente, principios) {
+async function opcionPrincipio(mensajeCliente, producto) {
 
     const prompt = `
-Como bot de un sistema de control, quiero que identifiques cuál de los siguientes principios activos desea el usuario según su mensaje (sea por el nombre o el numero de la posicion de la lista).
+Como bot de un sistema de control, quiero que identifiques cuál de los siguientes producto activos desea el usuario según su mensaje (sea por el nombre o el numero de la posicion de la lista).
 
 Devuelve EXCLUSIVAMENTE el objeto JSON completo del principio activo elegido, incluyendo sus concentraciones y productos asociados, sin agregar ningún texto adicional.
 
 Lista de principios activos disponibles:
-${JSON.stringify(principios, null, 2)}
+${JSON.stringify(producto, null, 2)}
 
 Mensaje del usuario: "${mensajeCliente}"
 `;
