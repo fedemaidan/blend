@@ -10,7 +10,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5460:5432"  # expone la DB a host.docker.internal
+      - "5460:5432" # expone la DB a host.docker.internal
     networks:
       - sorbynet
 
@@ -24,6 +24,7 @@ services:
       - db
     environment:
       NODE_ENV: development
+      PORT: 3000
       DATABASE_URL: "postgres://sorby_development:sorby_development@host.docker.internal:5460/BLDB"
     ports:
       - "3000:3000"
