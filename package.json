@@ -5,12 +5,14 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "migrate": "cd src && npx sequelize db:migrate",
+    "migrate": "npx sequelize db:migrate",
     "migrate-prod": "cd src && npx sequelize db:migrate --env production",
-    "start": "node index.js"
+    "start": "node index.js",
+    "start-api": "node api.js"
   },
   "dependencies": {
     "@whiskeysockets/baileys": "^6.17.16",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
     "firebase": "^11.6.0",
