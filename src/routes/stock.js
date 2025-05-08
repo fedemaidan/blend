@@ -1,24 +1,28 @@
 const express = require("express");
-const { Product, PrincipioActivo } = require("../../models");
+const { createPrincipioActivo } = require("../services/Api/principioActivo");
+const {
+  createProduct,
+  updateProduct,
+  getProducts,
+} = require("../services/Api/product");
 const router = express.Router();
 
 router.post("/principio-activo", async (req, res) => {
   try {
     const { nombre, precio, precio_maximo, alias } = req.body;
 
-    if (!nombre || !precio) {
+    if (!nombre || !precio || !precio_maximo || !alias) {
       return res.status(400).json({
-        message: "El nombre y el precio son obligatorios",
+        message: "Todos los campos son obligatorios",
       });
     }
 
-    // Crear un nuevo principio activo
-    const nuevoPrincipioActivo = await PrincipioActivo.create({
+    const nuevoPrincipioActivo = await createPrincipioActivo(
       nombre,
       precio,
       precio_maximo,
-      alias,
-    });
+      alias
+    );
 
     return res.status(201).json(nuevoPrincipioActivo);
   } catch (error) {
@@ -27,57 +31,30 @@ router.post("/principio-activo", async (req, res) => {
   }
 });
 
+router.get("/producto", async (req, res) => {
+  try {
+    const productos = await getProducts();
+
+    return res.status(200).json(productos);
+  } catch (err) {
+    console.error("Error al obtener los productos:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
 router.post("/producto", async (req, res) => {
   try {
-    const {
-      registro,
-      registro_senasa,
-      registo_inase,
-      especie,
-      cultivar,
-      marca,
-      empresa,
-      activos,
-      banda_toxicologica,
-      precio,
-      precio_minimo,
-      precio_maximo,
-      producto_propio,
-      stock,
-      potencial_proveedor,
-      rentabilidad,
-      activo,
-    } = req.body;
-
-    if (!marca || !precio) {
+    if (!req.body.marca || !req.body.precio) {
       return res.status(400).json({
         message: "La marca y el precio son obligatorios",
       });
     }
 
-    const nuevoProducto = await Product.create({
-      registro,
-      registro_senasa,
-      registo_inase,
-      especie,
-      cultivar,
-      marca,
-      empresa,
-      activos,
-      banda_toxicologica,
-      precio,
-      precio_minimo,
-      precio_maximo,
-      producto_propio: producto_propio || false,
-      stock: stock || 0,
-      potencial_proveedor,
-      rentabilidad,
-      activo: activo || false,
-    });
+    const newProduct = await createProduct(req.body);
 
     return res.status(201).json({
       message: "Producto creado exitosamente",
-      producto: nuevoProducto,
+      producto: newProduct,
     });
   } catch (error) {
     console.error("Error al agregar el producto:", error);
@@ -88,31 +65,26 @@ router.post("/producto", async (req, res) => {
 router.put("/producto/:id", async (req, res) => {
   try {
     const { id } = req.params;
-    const { stock } = req.body;
 
-    if (!stock) {
+    if (req.body.stock === undefined) {
       return res.status(400).json({
         message: "El stock es obligatorio",
       });
     }
 
-    const producto = await Product.findByPk(id);
-
-    if (!producto) {
-      return res.status(404).json({
-        message: "Producto no encontrado",
-      });
-    }
-
-    producto.stock = stock;
-    await producto.save();
+    const producto = await updateProduct(id, req.body);
 
     return res.status(200).json({
-      message: "Stock actualizado exitosamente",
+      message: "Producto actualizado exitosamente",
       producto,
     });
   } catch (error) {
-    console.error("Error al actualizar el stock del producto:", error);
+    console.error("Error al actualizar el producto:", error);
+
+    if (error.message === "Producto no encontrado") {
+      return res.status(404).json({ message: error.message });
+    }
+
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 });
