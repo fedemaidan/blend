@@ -63,10 +63,12 @@ router.get("/principio-activo/:id", async (req, res) => {
 
 router.get("/producto", async (req, res) => {
   try {
-    const productos = await getProducts();
+    const { page } = req.query;
 
-    return res.status(200).json(productos);
-  } catch (err) {
+    const result = await getProducts(page);
+
+    return res.status(200).json(result);
+  } catch (error) {
     console.error("Error al obtener los productos:", error);
     return res.status(500).json({ message: "Error interno del servidor" });
   }

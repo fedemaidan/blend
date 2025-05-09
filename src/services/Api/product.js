@@ -1,9 +1,45 @@
 const { Product } = require("../../../models");
 
-const getProducts = async () => {
-  const products = await Product.findAll();
+const getProducts = async (page = null) => {
+  const pageSize = 2; // Tamaño de página fijo
 
-  return products;
+  if (page === null || page === undefined) {
+    const products = await Product.findAll({
+      order: [["id", "ASC"]],
+    });
+
+    return {
+      products,
+      pagination: {
+        total: products.length,
+        pageSize: products.length,
+        totalPages: 1,
+      },
+    };
+  }
+
+  const currentPage = Math.max(1, parseInt(page));
+  const offset = (currentPage - 1) * pageSize;
+
+  const { count, rows: products } = await Product.findAndCountAll({
+    limit: pageSize,
+    offset: offset,
+    order: [["id", "ASC"]],
+  });
+
+  const totalPages = Math.ceil(count / pageSize);
+
+  return {
+    products,
+    pagination: {
+      total: count,
+      currentPage,
+      pageSize,
+      totalPages,
+      hasNext: currentPage < totalPages,
+      hasPrev: currentPage > 1,
+    },
+  };
 };
 
 const getProductById = async (id) => {
