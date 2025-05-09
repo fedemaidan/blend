@@ -1,6 +1,32 @@
 const express = require("express");
-const { Usuario } = require("../../models");
+const {
+  createUser,
+  existsUser,
+  deleteUser,
+  updateUser,
+  getUserById,
+} = require("../services/Api/usuario");
+const {
+  setRentabilidadDeseada,
+} = require("../services/Api/rentabilidadDeseada");
+
 const router = express.Router();
+
+router.get("/usuario/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Error al obtener el usuario:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
 
 router.post("/usuario", async (req, res) => {
   try {
@@ -12,16 +38,13 @@ router.post("/usuario", async (req, res) => {
       });
     }
 
-    const existingUser = await Usuario.findOne({ where: { usuario } });
+    const existingUser = await existsUser(usuario);
     if (existingUser) {
       return res.status(400).json({ message: "El usuario ya existe" });
     }
 
-    const newUser = await Usuario.create({
-      usuario,
-      permisos,
-      userId,
-    });
+    const newUser = await createUser(usuario, permisos, userId);
+
     return res.status(201).json(newUser);
   } catch (error) {
     console.error("Error al agregar el usuario:", error);
@@ -29,11 +52,11 @@ router.post("/usuario", async (req, res) => {
   }
 });
 
-router.delete("/usuario/:userId", async (req, res) => {
+router.delete("/usuario/:id", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
-    const deletedUser = await Usuario.destroy({ where: { userId } });
+    const deletedUser = await deleteUser(id);
     if (!deletedUser) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
@@ -45,30 +68,46 @@ router.delete("/usuario/:userId", async (req, res) => {
   }
 });
 
-router.put("/usuario/:userId", async (req, res) => {
+router.put("/usuario/:id", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
     const { permisos } = req.body;
 
     if (!permisos) {
       return res.status(400).json({ message: "Los permisos son obligatorios" });
     }
 
-    const updatedUser = await Usuario.update(updateFields, {
-      where: { userId },
-    });
+    const updatedUser = await updateUser(id, { permisos });
 
     if (!updatedUser[0]) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    const user = await Usuario.findOne({ where: { userId } });
+    const user = await getUserById(id);
     return res.status(200).json({
       message: "Usuario actualizado",
       user,
     });
   } catch (error) {
     console.error("Error al actualizar el usuario:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
+router.put("/rentabilidad-deseada", async (req, res) => {
+  try {
+    const { value } = req.body;
+    if (value === undefined) {
+      return res.status(400).json({ message: "El valor es obligatorio" });
+    }
+
+    const rentabilidad = await setRentabilidadDeseada(value);
+    return res.status(200).json({
+      message: "Rentabilidad deseada actualizada",
+      rentabilidad,
+    });
+  } catch (error) {
+    console.error("Error al establecer rentabilidad deseada:", error);
     return res.status(500).json({ message: "Error interno del servidor" });
   }
 });

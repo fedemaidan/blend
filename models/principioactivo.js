@@ -1,7 +1,7 @@
-'use strict';
-const { Model } = require('sequelize');
+"use strict";
+const { Model } = require("sequelize");
 module.exports = (sequelize, DataTypes) => {
-  const PrincipioActivo = sequelize.define('PrincipioActivo', {
+  const PrincipioActivo = sequelize.define("PrincipioActivo", {
     nombre: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -29,8 +29,8 @@ module.exports = (sequelize, DataTypes) => {
   // Definir la asociación con Concentracion
   PrincipioActivo.associate = (models) => {
     PrincipioActivo.hasMany(models.Concentracion, {
-      foreignKey: 'id_principio_activo',
-      as: 'concentraciones',
+      foreignKey: "id_principio_activo",
+      as: "concentraciones",
     });
   };
 
