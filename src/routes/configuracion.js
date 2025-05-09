@@ -12,6 +12,22 @@ const {
 
 const router = express.Router();
 
+router.get("/usuario/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const user = await getUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "Usuario no encontrado" });
+    }
+
+    return res.status(200).json(user);
+  } catch (error) {
+    console.error("Error al obtener el usuario:", error);
+    return res.status(500).json({ message: "Error interno del servidor" });
+  }
+});
+
 router.post("/usuario", async (req, res) => {
   try {
     const { usuario, permisos, userId } = req.body;
@@ -36,11 +52,11 @@ router.post("/usuario", async (req, res) => {
   }
 });
 
-router.delete("/usuario/:userId", async (req, res) => {
+router.delete("/usuario/:id", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
 
-    const deletedUser = await deleteUser(userId);
+    const deletedUser = await deleteUser(id);
     if (!deletedUser) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
@@ -52,22 +68,22 @@ router.delete("/usuario/:userId", async (req, res) => {
   }
 });
 
-router.put("/usuario/:userId", async (req, res) => {
+router.put("/usuario/:id", async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { id } = req.params;
     const { permisos } = req.body;
 
     if (!permisos) {
       return res.status(400).json({ message: "Los permisos son obligatorios" });
     }
 
-    const updatedUser = await updateUser(userId, { permisos });
+    const updatedUser = await updateUser(id, { permisos });
 
     if (!updatedUser[0]) {
       return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
-    const user = await getUserById(userId);
+    const user = await getUserById(id);
     return res.status(200).json({
       message: "Usuario actualizado",
       user,

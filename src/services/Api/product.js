@@ -6,6 +6,30 @@ const getProducts = async () => {
   return products;
 };
 
+const getProductById = async (id) => {
+  const producto = await Product.findOne({
+    where: {
+      id,
+    },
+  });
+
+  if (!producto) {
+    throw new Error("Producto no encontrado");
+  }
+
+  return producto;
+};
+
+const getProductByRegistro = async (registro) => {
+  const producto = await Product.findOne({
+    where: {
+      registro,
+    },
+  });
+
+  return producto;
+};
+
 const createProduct = async (productData) => {
   const dataWithDefaults = {
     ...productData,
@@ -19,7 +43,9 @@ const createProduct = async (productData) => {
 };
 
 const updateProduct = async (id, updateData) => {
-  const producto = await Product.findByPk(id);
+  const producto = await Product.findOne({
+    where: { id },
+  });
 
   if (!producto) {
     throw new Error("Producto no encontrado");
@@ -35,4 +61,6 @@ module.exports = {
   createProduct,
   updateProduct,
   getProducts,
+  getProductById,
+  getProductByRegistro,
 };

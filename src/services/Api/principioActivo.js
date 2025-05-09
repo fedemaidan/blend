@@ -1,25 +1,31 @@
 const { PrincipioActivo } = require("../../../models");
 
-const createPrincipioActivo = async (nombre, precio, precio_maximo, alias) => {
+const createPrincipioActivo = async (nombre, precio, precio_maximo) => {
   const nuevoPrincipioActivo = await PrincipioActivo.create({
     nombre,
     precio,
     precio_maximo,
-    alias,
   });
 
   return nuevoPrincipioActivo;
 };
 
-const getPrincipioActivoByNombre = async (nombre) => {
+const getPrincipioActivoById = async (id) => {
   const principioActivo = await PrincipioActivo.findOne({
-    where: { nombre },
+    where: { id },
   });
 
   return principioActivo;
 };
 
+const getPrincipiosActivos = async () => {
+  const principiosActivos = await PrincipioActivo.findAll();
+
+  return principiosActivos;
+};
+
 module.exports = {
   createPrincipioActivo,
-  getPrincipioActivoByNombre,
+  getPrincipiosActivos,
+  getPrincipioActivoById,
 };

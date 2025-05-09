@@ -13,13 +13,13 @@ const createUser = async (usuario, permisos, userId) => {
   };
 };
 
-const deleteUser = async (userId) => {
-  const deletedUser = await Usuario.destroy({ where: { userId } });
+const deleteUser = async (id) => {
+  const deletedUser = await Usuario.destroy({ where: { id } });
   return deletedUser;
 };
 
-const updateUser = async (userId, updateFields) => {
-  const updatedUser = await Usuario.update(updateFields, { where: { userId } });
+const updateUser = async (id, updateFields) => {
+  const updatedUser = await Usuario.update(updateFields, { where: { id } });
   return updatedUser;
 };
 
@@ -28,8 +28,8 @@ const existsUser = async (usuario) => {
   return !!existingUser;
 };
 
-const getUserById = async (userId) => {
-  const user = await Usuario.findOne({ where: { userId } });
+const getUserById = async (id) => {
+  const user = await Usuario.findOne({ where: { id } });
   return user;
 };
 const getUserByName = async (usuario) => {
