@@ -1,7 +1,6 @@
-const { Product, Concentracion, PrincipioActivo } = require('../../models');
-
+const { Product, Concentracion, PrincipioActivo } = require('../../../../../models');
+const { Op } = require("sequelize");
 const PrincipioActivoService = {
-
     // Recalcular precios de todos los productos asociados a un principio activo
     async recalcularPrecios(principioActivo) {
         if (!principioActivo || !principioActivo.id) {
@@ -55,22 +54,68 @@ const PrincipioActivoService = {
         }
     },
 
-    async obtenerPrincipiosActivos() {
-        try {
-            const principiosActivos = await PrincipioActivo.findAll({
-                where: {
-                    activo: true
-                }
-            });
-            const principiosActivosReducidos = principiosActivos.map(pa => {
-                return { id: pa.id, nombre: pa.nombre, alias: pa.alias };
-            });
-            return principiosActivosReducidos;
-        } catch (error) {
-            console.error('Error al obtener los principios activos:', error);
-            throw error;
+async obtenerPrincipiosActivos() {
+  try {
+    const principiosActivos = await PrincipioActivo.findAll({
+      where: {
+        activo: true
+      },
+      include: {
+        model: Concentracion,
+        as: 'concentraciones',
+        attributes: ['id', 'concentracion'],
+        required: true,
+        include: {
+          model: Product,
+          as: 'producto',
+          attributes: ['id', 'producto_propio', 'activo'],
+          where: {
+            producto_propio: false,
+            activo: true
+          },
+          required: true
         }
-    },
+      }
+    });
+
+    const mapPorNombre = new Map();
+
+    for (const pa of principiosActivos) {
+      const nombre = pa.nombre.trim();
+
+      if (!mapPorNombre.has(nombre)) {
+        mapPorNombre.set(nombre, {
+          id: pa.id,
+          nombre: pa.nombre,
+          alias: pa.alias,
+          precio: parseFloat(pa.precio),
+          precio_maximo: pa.precio_maximo ? parseFloat(pa.precio_maximo) : null,
+          concentraciones: []
+        });
+      }
+
+      const entry = mapPorNombre.get(nombre);
+
+      for (const conc of pa.concentraciones || []) {
+        const key = parseFloat(conc.concentracion);
+        const esPropio = conc.producto?.producto_propio;
+
+        if (!entry.concentraciones.some(c => c.concentracion === key)) {
+          entry.concentraciones.push({
+            id: conc.id,
+            concentracion: key,
+            producto_propio: esPropio
+          });
+        }
+      }
+    }
+
+    return Array.from(mapPorNombre.values());
+  } catch (error) {
+    console.error('❌ Error al obtener los principios activos:', error);
+    throw error;
+  }
+},
 
     async obtenerProductos() {
         try {
@@ -90,58 +135,7 @@ const PrincipioActivoService = {
         }
     },
 
-    async getPrincipiosActivosConStock() {
-        try {
-            const principiosActivos = await PrincipioActivo.findAll({
-                include: {
-                    model: Concentracion,
-                    as: 'concentraciones',
-                    where: {
-                        id: { [Op.ne]: null },
-                    },
-                    include: {
-                        model: Product,
-                        as: 'producto',
-                        where: {
-                            stock: { [Op.gt]: 0 },
-                        },
-                    },
-                },
-                where: {
-                    activo: true,
-                },
-            });
-
-            const principiosActivosConStock = principiosActivos.map((pa) => {
-                return {
-                    id: pa.id,
-                    nombre: pa.nombre,
-                    alias: pa.alias,
-                    concentraciones: pa.concentraciones.map((conc) => {
-                        return {
-                            id: conc.id,
-                            concentracion: conc.concentracion,
-                            producto: {
-                                id: conc.producto.id,
-                                marca: conc.producto.marca,
-                                empresa: conc.producto.empresa,
-                                activos: conc.producto.activos,
-                                registro: conc.producto.registro,
-                                stock: conc.producto.stock,
-                                precio: conc.producto.precio,
-                            },
-                        };
-                    }),
-                };
-            });
-
-            return principiosActivosConStock;
-        } catch (error) {
-            console.error('Error al obtener principios activos con stock:', error);
-            throw new Error('No se pudieron obtener los principios activos con stock.');
-        }
-    }
-
+    
 };
 
 module.exports = PrincipioActivoService;

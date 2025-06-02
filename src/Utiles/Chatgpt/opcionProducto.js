@@ -1,4 +1,4 @@
-const { getByChatGpt4o } = require("../Chatgpt/Base");
+const { getByChatGpt4o } = require("../../services/Chatgpt/Base");
 
 async function opcionPrincipio(mensajeCliente, producto) {
 
@@ -7,6 +7,7 @@ Como bot de un sistema de control, quiero que identifiques cuál de los siguient
 
 Devuelve EXCLUSIVAMENTE el objeto JSON completo del principio activo elegido, incluyendo sus concentraciones y productos asociados, sin agregar ningún texto adicional.
 
+si la seleccion no tiene sentido, devuelve un mensaje de error en el siguiente formato devuelve "false"
 Lista de principios activos disponibles:
 ${JSON.stringify(producto, null, 2)}
 

@@ -1,17 +1,17 @@
 const FlowManager = require('../FlowControl/FlowManager');
 const clientBuyerFlow = require('../Flows/clientBuyerFlow/clientBuyerFlow');
-//const clientSellerFlow = require('../clientBuyerFlow/clientSellerFlow');
 const defaultFlow = require('../Flows/INIT/INIT');
+const MenuFlow = require('../Flows/Menu/MenuFlow');
+const ProductBlendFlow = require('../Flows/EleccionBlend/ProductBlendFlow');
 
 class FlowMapper {
     async handleMessage(userId, message, sock, messageType) {
-
         //obtenemos el flow desde la memoria O BD, esto nos brindara, (Informacion de flow y step acutal, y los datos que hayamos persistido)
         let flow = await FlowManager.getFlow(userId);
 
         if (flow && flow.flowName) {
             switch (flow.flowName) {
-                case 'COMPRAR':
+                case 'COMPRA':
                     await clientBuyerFlow.Handle(userId, message, flow.currentStep, sock, messageType);
                     break;
 
@@ -19,8 +19,12 @@ class FlowMapper {
                     //await clientSellerFlow.Handle(userId, message, flow.currentStep, sock, messageType);
                     break;
 
-                case 'DEFAULT':
-                    await EgresoMaterialesFlow.Handle(userId, message, flow.currentStep, sock, messageType);
+                case 'MENU':
+                    await MenuFlow.Handle(userId, message, flow.currentStep, sock, messageType);
+                    break;
+
+                case 'BLEND':
+                    await ProductBlendFlow.Handle(userId, message, flow.currentStep, sock, messageType);
                     break;
 
                 default:

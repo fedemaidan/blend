@@ -1,6 +1,8 @@
 const { analizarIntencion } = require('../../Utiles/Chatgpt/AnalizarIntencion');
 const clientBuyerFlow = require('../clientBuyerFlow/clientBuyerFlow');
 //const clientSellerFlow = require('../clientBuyerFlow/clientSellerFlow');
+const MenuFlow = require('../Menu/MenuFlow');
+const FlowManager = require('../../FlowControl/FlowManager');
 
 
 const defaultFlow = {
@@ -20,6 +22,7 @@ const defaultFlow = {
                 result = message;
             }
 
+            console.log("Resultado de analizar intencion:", result);
             //Aqui van todas las ACCIONES que se encuentran en analizar intencion. El json y este switch deben hacer MATCH
             //Se encarga de Enrutar  los datos al flujo que el usuario se esta dirijiendo.
             switch (result.accion) {
@@ -35,6 +38,11 @@ const defaultFlow = {
                     await sock.sendMessage(userId, { text: "😕 No comprendi tu mensaje,❌ o no poseés los permisos necesarios  para esta acción. Por favor, repetilo." });
                     FlowManager.resetFlow(userId)
                     break;
+
+                    case "Menu":
+                    await MenuFlow.start(userId, { data: result.data }, sock);
+                    break;
+
 
                 case "NoRegistrado":
                     console.log("NO REGISTRADO")

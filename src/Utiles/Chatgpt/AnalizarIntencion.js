@@ -3,21 +3,10 @@ const { obtenerUsuarioPorUserId } = require("../../services/usuario/usuarioBase"
 
 const opciones = [
     {
-        //permiso: "accion1",  permisos necesarios para acceder a esta accion en particular. Se cargan en la BD tabla usuarios (permisos: json).
-        accion: "Comprar",
-        descripcion: "El usuario hace clara la intencion de comprar agroquimicos",
-        data:
-        {
-            mensaje: "el mismo mensaje del usuario."
-        }
-    },
-    {
-        //permiso: "accion1",  permisos necesarios para acceder a esta accion en particular. Se cargan en la BD tabla usuarios (permisos: json).
-        accion: "Vender",
-        descripcion: "El usuario hace clara la intencion de vender agroquimicos",
-        data:
-        {
-            mensaje: "el mismo mensaje del usuario."
+        // Si no existe un atributo permiso la accion puede ser ejecutada por cualquiera.
+        accion: "Menu",
+        data: {
+            Default: "El usuario envió un mensaje sin coherencia aparente."
         }
     },
     {
@@ -50,10 +39,9 @@ const analizarIntencion = async (message, sender) => {
         //los promt comprenden el 90% de que la informacion se valide y busque de buena manera.
         //Recomendacion: llena el formulario pre cargado con lo necesario.
         const prompt = `
-Descripcion: es para un ejemplo chat, simplemente analiza que quiere el usuario, elige la opcion mas apropiada (para el ejemplo utiliza ("Accion ejemplo" siempre))
+Descripcion: Analiza la intencion del usuario y devuelve un json con la accion a realizar.
 Formato de respuesta: devuelve el json, de la opcion elegida tal cual esta sin mensajes extras.
-Advertencia: corrige el texto del mensaje del usuario.
-Resumen del contexto: es una prueba flujo
+Advertencia: Si el mensaje no insinua compra o venta, utiliza la opcion menu.
 El usuario dice: "${message}"
 
 Tienes estas acciones posibles. Debes analizar la palabra clave del usuario: ${opcionesTxt}.

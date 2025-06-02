@@ -10,7 +10,7 @@ class FlowManager {
 
     // Establecer el flujo y paso inicial para un usuario
     async setFlow(userId, flowName, Step, flowData = {}) {
-        console.log(Step);
+
         const actualFlowData = this.userFlows[userId]?.flowData || {};
         const _flowData = { ...actualFlowData, ...flowData };
         this.userFlows[userId] = { flowName, currentStep: Step, flowData: _flowData };

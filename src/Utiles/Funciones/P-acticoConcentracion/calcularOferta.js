@@ -1,4 +1,4 @@
-const { Concentracion, Product } = require("../../models");
+const { Concentracion, Product } = require("../../../../models");
 const { getProductosPorConcentracionYPrincipioActivo } = require("../P-acticoConcentracion/obtenerPrincipio");
 const math = require('mathjs');
 
@@ -100,111 +100,115 @@ function calcularCantidades(precioTotal, productoElegido, productoPropio, produc
         cantidadProductoPropio: Math.round(cantidadProductoPropio)
     };
 }
+
 // || a partir de aqui son los propios de la funcionalidad de compra o ClientBuyerFlow:
-async function GetPedido(principioActivo, concentracion, input) {
+async function GetPedido(principioActivo, concentracion, cantidadSolicitada) {
     try {
-        // Obtener los productos disponibles
         const productos = await getProductosPorConcentracionYPrincipioActivo(principioActivo, concentracion);
 
-        // obtener productos con stock positivo y filtrarlos por cantidad (En lo posible evitar ensaladas de productos)
-        const productosConStock = productos.filter(p => p.stock > 0).sort((a, b) => b.stock - a.stock);
+        const productosConStock = productos
+            .filter(p => p.stock > 0)
+            .sort((a, b) => b.stock - a.stock); // Prioriza los de mayor stock
 
-        //Establecer variables del pedido! puede ser mas de un producto.
-        let totalPedido = 0;
-        const pedidoFinal = [];
+        let totalDisponible = 0;
 
-        // Recorrer los productos hasta cumplir el pedido
         for (const producto of productosConStock) {
-            if (totalPedido < input) {
-                const cantidadNecesaria = input - totalPedido;
-                const cantidadAUsar = Math.min(cantidadNecesaria, producto.stock); // Tomar lo necesario sin pasarse
+            if (totalDisponible >= cantidadSolicitada) break;
 
-                totalPedido += cantidadAUsar;
+            const cantidadNecesaria = cantidadSolicitada - totalDisponible;
+            const cantidadAUsar = Math.min(cantidadNecesaria, producto.stock);
 
-                // Agregar producto con la cantidad a usar
-                pedidoFinal.push({
-                    id: producto.id,
-                    activos: producto.activos,
-                    empresa: producto.empresa,
-                    marca: producto.marca,
-                    PrincipioActivo: principioActivo,
-                    Concentracion: concentracion,
-                    stockUsado: cantidadAUsar,
-                    precio: producto.precio
-                });
-            } else {
-                break; // Si ya cumplimos el pedido, salimos del loop
-            }
+            totalDisponible += cantidadAUsar;
         }
 
-        // Si no se logró suplir el pedido completo, lanzar error
-        if (totalPedido < input) {
-            return [];
-        }
-        return pedidoFinal;
+        return totalDisponible >= cantidadSolicitada;
     } catch (error) {
-        console.error('Error al generar el pedido:', error);
-        throw new Error('No se pudo completar el pedido.');
+        console.error('❌ Error al verificar el stock para el pedido:', error);
+        return false;
     }
 }
-
 
 async function CalcularOfertaCompra(
-    ProductoParaPago,                 // Producto de pago (ej: ATRAZINA)
-    productoDeseado,                  // Producto que el cliente quiere (ej: GLIFOSATO)
-    concentracion_deseada,            // (Podría ser usado para filtrar o mostrar info)
-    cantidadDeseada,                  // Cantidad que el cliente quiere recibir (por ejemplo, 20)
-    precioNegociado,                  // Precio negociado del producto de pago
-    productos_deseados                // Usualmente un array, pero aquí puedes pasar [productoDeseado]
+    principiocompra,
+    concentracioncompra,
+    cantidadDeseada,
+    cantidadOfrecida,
+    precioNegociado,
+    productoDeseado,
+    productoPropio
 ) {
+    console.log("🔍 PARAMETROS RECIBIDOS:");
+    console.log("🧪 Principio compra:", principiocompra);
+    console.log("💧 Concentración compra:", concentracioncompra);
+    console.log("📦 Cantidad deseada:", cantidadDeseada);
+    console.log("📦 Cantidad ofrecida:", cantidadOfrecida);
+    console.log("💵 Precio negociado:", precioNegociado);
+    console.log("🎯 Producto deseado:", productoDeseado);
+    console.log("🧫 Producto propio:", productoPropio);
+
     const oferta = [];
 
-    // Suponemos que 'productos_deseados' contiene el producto que se quiere recibir
-    for (const producto of productos_deseados) {
-        // Obtenemos el producto propio (para complementar la oferta)
-        const productoPropio = await Product.findOne({
-            where: { producto_propio: true },
-            order: [['stock', 'DESC']]
-        });
-
-        // Calcular cantidades
-        const {
-            cantidadPago,
-            cantidadRecibida,
-            cantidadPropio
-        } = await calcularCantidadesCompra(
-            cantidadDeseada,     // Cantidad fija deseada
-            producto,            // Producto recibido (ej: GLIFOSATO)
-            productoPropio,      // Producto propio
-            ProductoParaPago,    // Producto de pago (ej: ATRAZINA)
-            precioNegociado      // Precio negociado del producto de pago
-        );
-
-        // Construir la oferta
-        oferta.push({
-            cliente_aporta: {
-                producto: ProductoParaPago,        // Producto de pago (ej: ATRAZINA)
-                cantidad: cantidadPago,            // Calculado
-                precio_unitario: precioNegociado,
-            },
-            cliente_recibe: {
-                productos: [
-                    {
-                        producto: productoPropio,
-                        cantidad: cantidadPropio
-                    },
-                    {
-                        producto: producto,            // Producto deseado (ej: GLIFOSATO)
-                        cantidad: cantidadRecibida      // Fijado en cantidadDeseada
-                    }
-                ]
-            },
-        });
+    if (!productoDeseado || !productoDeseado.precio) {
+        console.error("❌ Error: Producto deseado inválido.");
+        return [];
     }
 
-    console.log(oferta);
+    if (!productoPropio || !productoPropio.precio || !productoPropio.rentabilidad) {
+        console.error("❌ Error: Producto Blend inválido o sin datos de rentabilidad/precio.");
+        return [];
+    }
+
+    const rentabilidadDeseada = 0.3;
+    const precioDeseadoUnidad = parseFloat(productoDeseado.precio);
+    const precioOfrecidoUnidad = parseFloat(principiocompra.precio);
+    const precioNegociadoUnidad = parseFloat(precioNegociado);
+
+    const valorDeseado = cantidadDeseada * precioDeseadoUnidad;
+    const valorOfrecido = cantidadOfrecida * precioNegociadoUnidad;
+
+    const gananciaEsperada = valorDeseado * rentabilidadDeseada;
+    const diferenciaAPerder = Math.max(0, valorOfrecido - (precioOfrecidoUnidad * cantidadOfrecida));
+    const cuantoQuieroGanar = gananciaEsperada + diferenciaAPerder;
+
+    const faltante = Math.max(0, (valorDeseado + cuantoQuieroGanar - valorOfrecido));
+
+    const cantidadBlend = faltante / (productoPropio.precio / productoPropio.rentabilidad);
+
+    console.log("📊 Cálculos intermedios:");
+    console.log("   - Valor deseado:", valorDeseado);
+    console.log("   - Valor ofrecido (sin tocar):", valorOfrecido);
+    console.log("   - Ganancia esperada:", gananciaEsperada);
+    console.log("   - Diferencia a recuperar:", diferenciaAPerder);
+    console.log("   - Faltante a cubrir con Blend:", faltante);
+    console.log("   - Cantidad Blend necesaria:", Math.ceil(cantidadBlend));
+
+    oferta.push({
+        cliente_aporta: {
+            nombre_principio: principiocompra.nombre,
+            concentracion: concentracioncompra.concentracion,
+            cantidad: cantidadOfrecida, // 🔒 No se recalcula
+            precio_unitario: precioNegociadoUnidad
+        },
+        cliente_recibe: {
+            productos: [
+                {
+                    producto: productoDeseado,
+                    cantidad: cantidadDeseada
+                },
+                {
+                    producto: productoPropio,
+                    cantidad: Math.ceil(cantidadBlend)
+                }
+            ]
+        }
+    });
+
+    console.log("♥♥♥ Fin CalcularOfertaCompra ♥♥♥\n");
+
     return oferta;
 }
+
+
 async function calcularCantidadesCompra(
     cantidadDeseada,          // Cantidad fija del producto que el cliente quiere recibir
     productoRecibido,         // Producto que se desea recibir (ej: GLIFOSATO)
