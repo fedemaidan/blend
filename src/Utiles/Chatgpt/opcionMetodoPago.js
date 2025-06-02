@@ -1,4 +1,4 @@
-const { getByChatGpt4o } = require("../Chatgpt/Base");
+const { getByChatGpt4o } = require("../../services/Chatgpt/Base");
 
 const opcion =
 {

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const csv = require('csv-parser');
-const { Product, PrincipioActivo, Concentracion, sequelize } = require('../models'); // Asegúrate de que la ruta sea correcta a tu modelo
+const { Product, PrincipioActivo, Concentracion, sequelize } = require('../../models'); // Asegúrate de que la ruta sea correcta a tu modelo
 const { Op } = require("sequelize");
 
 function sleep(ms) {
