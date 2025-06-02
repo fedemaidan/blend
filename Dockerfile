@@ -11,7 +11,7 @@ RUN npm install
 RUN npm install @ffmpeg-installer/ffmpeg
 
 COPY . .
-
+RUN npm install qrcode
 ARG RAILWAY_STATIC_URL
 ARG PUBLIC_URL
 ARG PORT
