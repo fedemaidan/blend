@@ -4,6 +4,7 @@ const getMessageType = require("./src/services/Mensajes/GetType");
 const messageResponder = require("./src/services/Mensajes/messageResponder");
 const socketSingleton = require("./src/services/SockSingleton/sockSingleton");
 const QRCode = require("qrcode");
+const cors = require("cors");
 // Importa Express para exponer el QR vía web
 const express = require("express");
 const apiRoutes = require("./src/routes/routes");
