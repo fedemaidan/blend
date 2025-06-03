@@ -2,7 +2,7 @@
 # psql: -U sorby_development -d BLDB
 
 # LOCAL: pg_dump --data-only -U sorby_development -d BLDB -f dump/backup.sql
-
+# instalar local el dump: psql -U sorby_development -d BLDB < dump/backup.sql
 # Conectarme 
 PGPASSWORD=rllBciZldfhGwLsnlIGswIVRCLtSlJkD psql -h interchange.proxy.rlwy.net -U postgres -p 22900 -d railway
 

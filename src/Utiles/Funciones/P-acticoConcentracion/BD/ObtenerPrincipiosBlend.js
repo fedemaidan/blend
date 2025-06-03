@@ -26,19 +26,25 @@ module.exports = async function ObtenerPrincipiosBlend() {
             ]
         });
 
-        // Formato plano: cada ítem representa un producto con su principio y concentración
         const items = [];
 
         principiosBlend.forEach(pa => {
             pa.concentraciones.forEach(conc => {
+                const prod = conc.producto;
                 items.push({
-                    producto: conc.producto.activos,
+                    producto: prod.activos,
                     principio: pa.nombre,
                     concentracion: conc.concentracion,
-                    marca: conc.producto.marca,
-                    empresa: conc.producto.empresa,
-                    id_producto: conc.producto.id,
-                    id_concentracion: conc.id
+                    marca: prod.marca,
+                    empresa: prod.empresa,
+                    id_producto: prod.id,
+                    id_concentracion: conc.id,
+                    precio: prod.precio,
+                    precio_maximo: prod.precio_maximo,
+                    stock: prod.stock,
+                    rentabilidad: prod.rentabilidad,
+                    producto_propio: prod.producto_propio,
+                    activo: prod.activo
                 });
             });
         });
