@@ -56,7 +56,7 @@ Tienes estas acciones posibles. Debes analizar la palabra clave del usuario: ${o
         return respuesta?.json_data || respuesta;
 
     } catch (error) {
-        console.error('Error al analizar la intención:', error.message);
+        console.log('Error al analizar la intención:', error.message);
         return { accion: "No comprendido" };
     }
 };
