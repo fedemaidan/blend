@@ -21,9 +21,11 @@ const opciones = [
 const analizarIntencion = async (message, sender) => {
     try {
 
+        console.log("Entro a analizar intencion")
         //Obtiene el usuario y sus permisos, mediante el numero de telefono (sender)
         const usuario = await obtenerUsuarioPorUserId(sender);
         const permisosUsuario = (usuario?.permisos || []).map(p => p.toUpperCase());
+        console.log("HIZO PATENTE Y PERMISO")
 
         const opcionesFiltradas = opciones.filter(op => {
             // NO opcion "permiso" = Acceso concedido
@@ -33,6 +35,7 @@ const analizarIntencion = async (message, sender) => {
             return permisosUsuario.includes(op.permiso.toUpperCase());
         });
 
+        console.log("Filtro usuario")
         //------------------------- LOGICA DE CHAT GPT-----------------------------//
         const opcionesTxt = JSON.stringify(opcionesFiltradas);
 
@@ -47,6 +50,7 @@ El usuario dice: "${message}"
 Tienes estas acciones posibles. Debes analizar la palabra clave del usuario: ${opcionesTxt}.
 `;
 
+console.log("LE esta por enviar el promts")
         const response = await getByChatGpt4o(prompt);
         const respuesta = JSON.parse(response);
 
@@ -54,7 +58,6 @@ Tienes estas acciones posibles. Debes analizar la palabra clave del usuario: ${o
         //Acciones realizables por chatgpt:
         // coincidencia de articulos(busqueda de stock), Calculos avanzados(existencias y moviemientos), Analizar intencion(que necesita el usuario)
         return respuesta?.json_data || respuesta;
-
     } catch (error) {
         console.log('Error al analizar la intención:', error.message);
         return { accion: "No comprendido" };
