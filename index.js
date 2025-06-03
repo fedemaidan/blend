@@ -33,18 +33,22 @@ let latestQR = null;
 
 // Ruta para mostrar el QR en un navegador
 app.get("/qr", (req, res) => {
+  
   if (!latestQR) {
     return res.send("QR no generado aún. Espera...");
   }
   // Genera una imagen en base64 del QR y la envía al navegador
   QRCode.toDataURL(latestQR, (err, url) => {
+    console.log(latestQR)
     if (err) return res.status(500).send("Error generando QR");
     res.send(`<img src="${url}" style="width:300px;">`);
   });
 });
 
 const startBot = async () => {
-  const sock = await connectToWhatsApp();
+  const sock = await connectToWhatsApp((qr) => {
+    latestQR = qr; // Esto actualiza la variable externa
+  });
   await socketSingleton.setSock(sock);
 
   sock.ev.on("messages.upsert", async (message) => {
@@ -58,10 +62,7 @@ const startBot = async () => {
   });
 
   setInterval(() => console.log("Keep-alive"), 5 * 60 * 1000);
-  setInterval(
-    async () => await sock.sendPresenceUpdate("available"),
-    10 * 60 * 1000
-  );
+  setInterval(() => sock.sendPresenceUpdate("available"), 10 * 60 * 1000);
 };
 
 app.listen(port, () => {
