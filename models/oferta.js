@@ -1,6 +1,4 @@
 'use strict';
-const { Model } = require('sequelize');
-
 module.exports = (sequelize, DataTypes) => {
   const Oferta = sequelize.define('Oferta', {
     id: {
@@ -54,12 +52,14 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.DECIMAL(10, 2),
       allowNull: true,
       defaultValue: 0.00
+    },
+    negociacion: {
+      type: DataTypes.JSON,
+      allowNull: false
     }
   }, {
-    sequelize,
-    modelName: 'Oferta',
     tableName: 'ofertas',
-    timestamps: true,
+    timestamps: true
   });
 
   return Oferta;

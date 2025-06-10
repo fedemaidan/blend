@@ -32,7 +32,7 @@ module.exports = async function ObtenerPrincipiosBlend() {
             pa.concentraciones.forEach(conc => {
                 const prod = conc.producto;
                 items.push({
-                    producto: prod.activos,
+                    producto: prod,
                     principio: pa.nombre,
                     concentracion: conc.concentracion,
                     marca: prod.marca,

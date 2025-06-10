@@ -1,6 +1,6 @@
 const { analizarIntencion } = require('../../Utiles/Chatgpt/AnalizarIntencion');
 const clientBuyerFlow = require('../clientBuyerFlow/clientBuyerFlow');
-//const clientSellerFlow = require('../clientBuyerFlow/clientSellerFlow');
+const clientSellerFlow = require('../clientSellerFlow/clientSellerFlow');
 const MenuFlow = require('../Menu/MenuFlow');
 const FlowManager = require('../../FlowControl/FlowManager');
 
@@ -31,7 +31,7 @@ const defaultFlow = {
                     break;
 
                 case "vender":
-                    //clientSellerFlow.start(userId, { data: result.data }, sock)
+                    clientSellerFlow.start(userId, { data: result.data }, sock)
                     break;
 
                 case "No comprendido":

@@ -19,8 +19,6 @@ module.exports = async function SeleccionarPrincipioPago(userId, data, sock) {
         return;
     }
 
-    console.log("📦 Principio activo seleccionado (completo):", principiocompra);
-
     await sock.sendMessage(userId, {
         text: `✅ Has seleccionado el principio activo para pago: *${principiocompra.nombre}*.`
     });

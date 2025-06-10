@@ -1,17 +1,16 @@
 const FlowManager = require('../../FlowControl/FlowManager');
 
 module.exports = async function MenuFist(userId, data, sock) {
-    const msg = `👋 ¡Bienvenido/a a *Blend*!
+const msg = `👋 ¡Hola! Bienvenido a Blendy. Soy tu asistente personal para la compra, venta e intercambio de agroquímicos. 🚜`;
 
-¿Qué operación deseas realizar?
-
-1️⃣ -Compra  
-2️⃣ -Venta  
-3️⃣ -Ayuda
-
-✏️ *Responde con el número de la opción deseada.*`;
+const msg_base = 'Puedo ayudarte si:\n' +
+'1️⃣ Querés *comprar* productos.\n' +
+'2️⃣ Querés *vender* productos.\n' +
+'3️⃣ Quiero saber más del servicio.\n' +
+'\nPor favor, responde con el número de la opción que deseas. 🧠';
 
     await sock.sendMessage(userId, { text: msg });
+    await sock.sendMessage(userId, { text: msg_base });
 
     await FlowManager.setFlow(userId, "MENU", "ConfirmarFlujo", data);
 };

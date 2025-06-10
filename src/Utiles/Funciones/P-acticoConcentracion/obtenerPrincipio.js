@@ -1,5 +1,6 @@
 const { Concentracion, Product } = require("../../../../models");
 const { obtenerPrincipiosActivos } = require("../P-acticoConcentracion/BD/pActivo");
+const { obtenerPrincipiosActivosVenta } = require("../P-acticoConcentracion/BD/pActivo");
 const obtenerPrincipiosConStock = require("../P-acticoConcentracion/BD/obtenerPrincipiosConStock");
 
 async function getPrincipiosActivosDisponibles() {
@@ -41,4 +42,8 @@ async function getPrincipiosActivosAceptados() {
     return await obtenerPrincipiosActivos()
 }
 
-module.exports = { getPrincipiosActivosDisponibles, getPrincipiosActivosAceptados, getProductosPorConcentracionYPrincipioActivo }
+async function getPrincipiosActivosAceptadosVenta() {
+    return await obtenerPrincipiosActivosVenta()
+}
+
+module.exports = { getPrincipiosActivosDisponibles, getPrincipiosActivosAceptados, getProductosPorConcentracionYPrincipioActivo, getPrincipiosActivosAceptadosVenta }

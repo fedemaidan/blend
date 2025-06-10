@@ -31,7 +31,6 @@ async function processCSV(filePath) {
         .on('data', async (row) => {
             // if (row.registro === "S_40345") {
                 const activosArray = row.activos.split('##').map((activo) => activo.trim());
-                console.log(activosArray)
                 let precioProducto = 0; // Precio acumulado del producto
                 let concentraciones = []; // Datos para crear entidades de Concentracion
                 
@@ -58,7 +57,6 @@ async function processCSV(filePath) {
                                     activo: false,
                                     alias: []
                                 }, { transaction });
-                                console.log(`Principio activo ${principioActivo.id} creado.`);
                             }
     
                             await transaction.commit();
@@ -105,8 +103,6 @@ async function processCSV(filePath) {
             // }
         })
         .on('end', async () => {
-            console.log('Archivo procesado con éxito.');
-
             try {
                 for (const { productoData, concentraciones } of productos) {
                     // Crear producto
@@ -116,14 +112,9 @@ async function processCSV(filePath) {
                     for (const concentracion of concentraciones) {
                         concentracion.id_producto = producto.id;
                     }
-                    console.log("Voy a insertar las concentraciones", concentraciones);
                     await Concentracion.bulkCreate(concentraciones);
-
-                    console.log(`Producto ${producto.registro} creado con sus concentraciones.`);
                 }
-                console.log("Todos los productos y concentraciones fueron cargados exitosamente.");
             } catch (error) {
-                console.error('Error al insertar los productos y concentraciones en la base de datos:', error.message);
             }
         })
         .on('error', (err) => {

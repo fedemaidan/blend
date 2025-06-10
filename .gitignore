@@ -1,6 +1,6 @@
 config/drive_json_key.json
 src/services/firebase/firebaseServiceAccount.js
-auth_info2/
+auth_info/
 node_modules
 .env
 git 

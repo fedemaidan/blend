@@ -10,10 +10,6 @@ module.exports = async function seleccionarPrincipio(userId, data, sock) {
     // Obtener selección del usuario desde GPT (sin id)
     const seleccionGPT = await opcionPrincipio(data, soloPrincipios);
 
-    console.log("📊📊📊📊📊📊📊📊📊📊📊📊📊");
-    console.log("📦 Principio activo seleccionado (sin ID):", seleccionGPT);
-    console.log("📊📊📊📊📊📊📊📊📊📊📊📊📊");
-
     // Buscar el objeto completo con ID desde la lista original
     const seleccionadoCompleto = principios.find(p =>
         p.principio_activo.nombre.trim().toLowerCase() === seleccionGPT.nombre.trim().toLowerCase()
@@ -27,14 +23,19 @@ module.exports = async function seleccionarPrincipio(userId, data, sock) {
     const principioReal = seleccionadoCompleto.principio_activo;
     const concentraciones = seleccionadoCompleto.concentraciones || [];
 
+    // ✅ Mostrar al usuario qué seleccionó
+    await sock.sendMessage(userId, {
+        text: `✅ Has seleccionado el principio activo: *${principioReal.nombre}*.`
+    });
+
     const msg = '📊 Elige la concentración disponible para este principio activo. Estas son las opciones:\n' +
         concentraciones.map((c, i) => `${i + 1}. ${(c.concentracion * 100).toFixed(2)}%`).join('\n') +
-        '\n\nPor favor, responde con el número de tu elección.';
+        '\n\nPor favor, respondé con el número de tu elección.';
 
     await sock.sendMessage(userId, { text: msg });
 
     FlowManager.setFlow(userId, "COMPRA", "seleccionarConcentracion", {
-        principioSeleccionado: principioReal, // ✅ este tiene ID
+        principioSeleccionado: principioReal, // ✅ tiene ID
         concentraciones
     });
 };

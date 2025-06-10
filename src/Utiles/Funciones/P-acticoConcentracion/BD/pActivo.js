@@ -114,8 +114,97 @@ async obtenerPrincipiosActivos() {
   } catch (error) {
     console.error('❌ Error al obtener los principios activos:', error);
     throw error;
+  }},
+
+async obtenerPrincipiosActivosVenta() {
+  try {
+    const principiosActivos = await PrincipioActivo.findAll({
+      where: { activo: true },
+      include: {
+        model: Concentracion,
+        as: 'concentraciones',
+        attributes: ['id', 'concentracion'],
+        required: true,
+        include: {
+          model: Product,
+          as: 'producto',
+          attributes: [
+            'id', 'registro', 'registro_senasa', 'registo_inase',
+            'especie', 'cultivar', 'marca', 'empresa', 'activos',
+            'banda_toxicologica', 'precio', 'precio_minimo', 'precio_maximo',
+            'producto_propio', 'stock', 'potencial_proveedor',
+            'rentabilidad', 'costo_promedio_ponderado', 'activo'
+          ],
+          where: {
+            producto_propio: false,
+            activo: true
+          },
+          required: true
+        }
+      }
+    });
+
+    const mapPorNombre = new Map();
+
+    for (const pa of principiosActivos) {
+      const nombre = pa.nombre.trim();
+
+      if (!mapPorNombre.has(nombre)) {
+        mapPorNombre.set(nombre, {
+          id: pa.id,
+          nombre: pa.nombre,
+          alias: pa.alias,
+          precio: parseFloat(pa.precio),
+          precio_maximo: pa.precio_maximo ? parseFloat(pa.precio_maximo) : null,
+          activo: pa.activo,
+          concentraciones: []
+        });
+      }
+
+      const entry = mapPorNombre.get(nombre);
+
+      for (const conc of pa.concentraciones || []) {
+        const key = parseFloat(conc.concentracion);
+        const producto = conc.producto;
+
+        if (!entry.concentraciones.some(c => c.concentracion === key)) {
+          entry.concentraciones.push({
+            id: conc.id,
+            concentracion: key,
+            producto_propio: producto.producto_propio,
+            producto: {
+              id: producto.id,
+              registro: producto.registro,
+              registro_senasa: producto.registro_senasa,
+              registo_inase: producto.registo_inase,
+              especie: producto.especie,
+              cultivar: producto.cultivar,
+              marca: producto.marca,
+              empresa: producto.empresa,
+              activos: producto.activos,
+              banda_toxicologica: producto.banda_toxicologica,
+              precio: producto.precio,
+              precio_minimo: producto.precio_minimo,
+              precio_maximo: producto.precio_maximo,
+              producto_propio: producto.producto_propio,
+              stock: producto.stock,
+              potencial_proveedor: producto.potencial_proveedor,
+              rentabilidad: producto.rentabilidad,
+              costo_promedio_ponderado: producto.costo_promedio_ponderado,
+              activo: producto.activo
+            }
+          });
+        }
+      }
+    }
+
+    return Array.from(mapPorNombre.values());
+  } catch (error) {
+    console.error('❌ Error al obtener los principios activos:', error);
+    throw error;
   }
 },
+
 
     async obtenerProductos() {
         try {

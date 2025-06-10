@@ -1,5 +1,5 @@
-const FlowManager = require('../../../../../FlowControl/FlowManager');
-const precioOfrecido = require('../../../../../Utiles/Chatgpt/precioOfrecido');
+const FlowManager = require('../../../FlowControl/FlowManager');
+const precioOfrecido = require('../../../Utiles/Chatgpt/precioOfrecido');
 
 module.exports = async function NegociarPrecioPago(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
@@ -10,12 +10,10 @@ module.exports = async function NegociarPrecioPago(userId, data, sock) {
         await sock.sendMessage(userId, {
             text: '❌ No se pudo recuperar la información necesaria para la negociación. Intenta de nuevo desde el inicio.'
         });
-        console.error("❌ Faltan datos: concentracion o principio");
         return;
     }
 
-    let input = data;
-    input = input.replace(/,([^,]*)$/, '.$1');
+    let input = data.replace(/,([^,]*)$/, '.$1');
     let precio = parseFloat(input);
 
     if (isNaN(precio) || precio <= 0) {
@@ -31,25 +29,29 @@ module.exports = async function NegociarPrecioPago(userId, data, sock) {
 
     const precioFinal = parseFloat(principio.precio);
     const precioMaximoAceptado = parseFloat(principio.precio_maximo ?? precioFinal);
-    const precioInicial = parseFloat((precioFinal * 0.7).toFixed(2)); // Punto de partida para negociar si no hay máximo
+    const precioInicial = parseFloat((precioFinal * 0.7).toFixed(2));
 
-    const contador = typeof flowData.contador_negociacion === "number"
-        ? flowData.contador_negociacion
-        : 1;
+    const contador = typeof flowData.contador_negociacion === "number" ? flowData.contador_negociacion : 1;
 
-    // Si el precio ofrecido es mayor al máximo aceptado, negociamos
     if (precio > precioMaximoAceptado) {
         let contraoferta;
-        if (contador === 1) {
-            contraoferta = precioInicial;
-        } else if (contador === 2) {
-            contraoferta = precioInicial + (precioFinal - precioInicial) * 0.5;
-        } else if (contador === 3) {
-            contraoferta = precioInicial + (precioFinal - precioInicial) * 0.75;
-        } else if (contador === 4) {
-            contraoferta = precioFinal;
-        } else {
-            contraoferta = precioMaximoAceptado;
+
+        switch (contador) {
+            case 1:
+                contraoferta = precioInicial;
+                break;
+            case 2:
+                contraoferta = precioInicial + (precioFinal - precioInicial) * 0.5;
+                break;
+            case 3:
+                contraoferta = precioInicial + (precioFinal - precioInicial) * 0.75;
+                break;
+            case 4:
+                contraoferta = precioFinal;
+                break;
+            default:
+                contraoferta = precioMaximoAceptado;
+                break;
         }
 
         contraoferta = parseFloat(contraoferta.toFixed(2));
@@ -62,27 +64,24 @@ module.exports = async function NegociarPrecioPago(userId, data, sock) {
             default: `🛑 Mi oferta final es *${contraoferta}*.`
         };
 
-        const msg = mensajes[contador] || mensajes.default;
+        await sock.sendMessage(userId, { text: mensajes[contador] || mensajes.default });
 
-        await sock.sendMessage(userId, { text: msg });
-
-        await FlowManager.setFlow(userId, "COMPRA", "NegociarPrecioPago", {
+        return FlowManager.setFlow(userId, "VENTA", "NegociarPrecioPago", {
             ...flowData,
             contador_negociacion: contador + 1
         });
-
-        return;
     }
 
-    // Si el precio ofrecido es aceptable (menor o igual al máximo)
     await sock.sendMessage(userId, {
-        text: `🎉 ¡Genial! Aceptamos tu precio de *${precio.toFixed(2)}.`
+        text: `🎉 ¡Genial! Aceptamos tu precio de *${precio.toFixed(2)}*.`
     });
 
-   await sock.sendMessage(userId, {
-    text: `📦 ¿Cuántas unidades querés ofrecer de *${principio.nombre}*?`
-});
+    await sock.sendMessage(userId, {
+        text: `📦 ¿Cuántas unidades querés ofrecer de *${principio.nombre}*?`
+    });
 
-    await FlowManager.setFlow(userId, "COMPRA", "CantidadOfrecida", {...flowData, precio});
-
+    FlowManager.setFlow(userId, "VENTA", "cantidadYpago", {
+        ...flowData,
+        precio,
+    });
 };

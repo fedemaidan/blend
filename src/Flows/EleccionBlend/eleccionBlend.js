@@ -6,7 +6,7 @@ module.exports = async function eleccionBlend(userId, data, sock) {
     const seleccion = parseInt(data);
 
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    
+
     const productosBlend = flowData.productosBlend;
 
     console.log("FLOW DATA EN ELECCION BLEND.")
@@ -28,14 +28,19 @@ module.exports = async function eleccionBlend(userId, data, sock) {
 
     const productoSeleccionado = productosBlend[seleccion - 1];
 
-    await FlowManager.setFlow(userId, "COMPRA", "AceptarOferta", {
+    const flujoActual = flowData.flowName
+    console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅")
+    console.log(flujoActual)
+    console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅")
+
+    await FlowManager.setFlow(userId, flujoActual, "AceptarOferta", {
         ...flowData,
         productoBlendSeleccionado: productoSeleccionado,
     });
 
     await sock.sendMessage(userId, {
-        text: `✅ Seleccionaste *${productoSeleccionado.producto}*.\n🧪 Principio activo: *${productoSeleccionado.principio}*`,
+        text: `✅ Seleccionaste Principio activo: *${productoSeleccionado.principio}*`,
     });
 
-    await MostrarOfertaGenerada (userId, sock);
+    await MostrarOfertaGenerada(userId, sock);
 };

@@ -13,12 +13,18 @@ module.exports = async function mostrarBlend(userId, sock) {
         return;
     }
 
+    // Log para inspeccionar la estructura del producto blend
+    console.log("📦 Productos Blend disponibles:");
+    productosBlend.forEach((item, i) => {
+        console.log(`🔍 Producto ${i + 1}:`);
+        console.log(JSON.stringify(item, null, 2));
+    });
+
     let mensaje = "*Bienvenido al módulo Blend de productos propios*\n\n";
     mensaje += "🔬 *Productos disponibles para Blend:*\n\n";
 
     productosBlend.forEach((item, i) => {
-        mensaje += `🧪 *${i + 1}.* ${item.producto}\n`;
-        mensaje += `   • Principio activo: ${item.principio}\n`;
+        mensaje += `🧪 *${i + 1}.* ${item.principio}\n`;
         mensaje += `   • Concentración: ${(item.concentracion * 100).toFixed(2)}%\n`;
     });
 
@@ -26,5 +32,5 @@ module.exports = async function mostrarBlend(userId, sock) {
 
     await sock.sendMessage(userId, { text: mensaje });
 
-    await FlowManager.setFlow(userId, "BLEND", "eleccionBlend", {...flowData, productosBlend});
+    await FlowManager.setFlow(userId, "BLEND", "eleccionBlend", { ...flowData, productosBlend });
 };
