@@ -2,17 +2,10 @@ const FlowManager = require('../../../../../FlowControl/FlowManager');
 const precioOfrecido = require('../../../../../Utiles/Chatgpt/precioOfrecido');
 
 module.exports = async function NegociarPrecioPago(userId, data, sock) {
+    
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const concentracion = flowData?.concentracioncompra;
-    const principio = flowData?.principiocompra;
+    const principio = flowData?.productoPago.Pactivo;
 
-    if (!concentracion || !principio) {
-        await sock.sendMessage(userId, {
-            text: '❌ No se pudo recuperar la información necesaria para la negociación. Intenta de nuevo desde el inicio.'
-        });
-        console.error("❌ Faltan datos: concentracion o principio");
-        return;
-    }
 
     let input = data;
     input = input.replace(/,([^,]*)$/, '.$1');
@@ -83,6 +76,6 @@ module.exports = async function NegociarPrecioPago(userId, data, sock) {
     text: `📦 ¿Cuántas unidades querés ofrecer de *${principio.nombre}*?`
 });
 
-    await FlowManager.setFlow(userId, "COMPRA", "CantidadOfrecida", {...flowData, precio});
+    await FlowManager.setFlow(userId, "COMPRA", "CantidadOfrecida", {...flowData, preciopago:precio});
 
 };

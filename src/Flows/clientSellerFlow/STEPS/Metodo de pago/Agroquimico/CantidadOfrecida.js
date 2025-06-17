@@ -16,7 +16,7 @@ module.exports = async function cantidadYpago(userId, data, sock) {
 
     await FlowManager.setFlow(userId, "VENTA", "eleccionBlend", {
         ...flowData,
-        totalParaPagar: cantidad
+        Cantapagar: cantidad
     });
 
     await mostrarBlend(userId, sock);

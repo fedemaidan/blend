@@ -1,38 +1,44 @@
 const FlowManager = require('../../../../../FlowControl/FlowManager');
-const opcionPrincipio = require('../../../../../Utiles/Chatgpt/opcionPrincipio');
 
 module.exports = async function SeleccionarPrincipioPago(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const { principioscompra } = flowData;
+    const { principiosPago } = flowData;
 
-    // GPT devuelve solo el nombre u objeto parcial
-    const seleccionado = await opcionPrincipio(data, principioscompra);
+    console.log("📦 Principios disponibles para selección:", principiosPago.map(p => p.principio_activo.nombre));
 
-    // Buscar el objeto completo desde principioscompra
-    const principiocompra = principioscompra.find(p => p.nombre === seleccionado.nombre);
+    const index = parseInt(data) - 1;
 
-    if (!principiocompra) {
+    if (isNaN(index) || index < 0 || index >= principiosPago.length) {
         await sock.sendMessage(userId, {
-            text: `❌ No se encontró el principio activo seleccionado.`
+            text: `❌ Entrada no válida. Por favor, respondé con el número correspondiente a tu elección.`
         });
-        console.error("❌ principio no encontrado en la lista original:", seleccionado);
+        console.error("❌ Índice fuera de rango o inválido:", data);
         return;
     }
 
+    const principiocompra = principiosPago[index];
+
     await sock.sendMessage(userId, {
-        text: `✅ Has seleccionado el principio activo para pago: *${principiocompra.nombre}*.`
+        text: `✅ Has seleccionado el principio activo para pago: *${principiocompra.principio_activo.nombre}*.`
     });
 
     const concentracionescompra = principiocompra.concentraciones || [];
 
+    if (concentracionescompra.length === 0) {
+        await sock.sendMessage(userId, {
+            text: '⚠️ Este principio activo no tiene concentraciones disponibles. Seleccioná otro, por favor.'
+        });
+        return;
+    }
+
     const msg = '📊 Ahora elige la concentración para este principio activo. Estas son las opciones:\n' +
         concentracionescompra.map((c, i) => `${i + 1}. *${(c.concentracion * 100).toFixed(2)}%*`).join('\n') +
-        '\n\nPor favor, responde con el número de tu elección.';
+        '\n\nPor favor, respondé con el número de tu elección.';
 
     await sock.sendMessage(userId, { text: msg });
 
     await FlowManager.setFlow(userId, "COMPRA", "SeleccionarConcentracionPago", {
-        principiocompra,
-        concentracionescompra
+        principiopago: principiocompra,
+        concentracionespago: concentracionescompra
     });
 };

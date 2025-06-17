@@ -18,12 +18,18 @@ module.exports = async function SeleccionarConcentracionPago(userId, data, sock)
         text: `✅ Has seleccionado *${principioPago.nombre}* con *${(seleccion.concentracion * 100).toFixed(2)}%* de concentración.`
     });
 
-        await sock.sendMessage(userId, {
+    await sock.sendMessage(userId, {
         text: `📦 ¿Cuántas unidades querés de *${principioPago.nombre}*?`
     });
 
+
+    principioPago.concentracion = seleccion.concentracion;
+
     await FlowManager.setFlow(userId, "VENTA", "CantidadOfrecida", {
-        principioPago,
-        concentracionPago: seleccion
+        productoPago: {
+            Pactivo: principioPago,
+            precio: parseFloat(principioPago.precio),
+            concentracion: seleccion.concentracion,
+        }
     });
 };

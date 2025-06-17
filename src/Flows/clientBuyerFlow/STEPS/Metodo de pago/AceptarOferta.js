@@ -1,11 +1,9 @@
 const FlowManager = require('../../../../FlowControl/FlowManager');
 const  opcionElegida  = require('../../../../Utiles/Chatgpt/opcionElegida');
-const ConfessionarOferta = require('../../../../Utiles/Funciones/ConfessionarOferta')
+const ConfessionarOferta = require('../../../../Utiles/Funciones/ConfessionarOferta');
 module.exports = async function AceptarOferta(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
     respuesta = await opcionElegida(data);
-
-    
 
     if (respuesta.data.Eleccion === 1) {
         await sock.sendMessage(userId, {

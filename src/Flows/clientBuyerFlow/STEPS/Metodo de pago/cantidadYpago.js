@@ -3,7 +3,10 @@ const { GetPedido } = require('../../../../Utiles/Funciones/P-acticoConcentracio
 
 module.exports = async function cantidadYpago(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const { principioSeleccionado, concentracionSeleccionada } = flowData ?? {};
+    const { productoDeseado } = flowData ?? {};
+
+    console.log("🔍 productoDeseado completo:");
+    console.dir(productoDeseado, { depth: null, colors: true });
 
     // ✅ Validación de cantidad
     const cantidad = parseFloat(data);
@@ -13,7 +16,7 @@ module.exports = async function cantidadYpago(userId, data, sock) {
     }
 
     // ✅ Validación de concentración
-    const valorConcentracion = parseFloat(concentracionSeleccionada.concentracion);
+    const valorConcentracion = parseFloat(productoDeseado.concentracion);
     if (isNaN(valorConcentracion)) {
         await sock.sendMessage(userId, {
             text: "❌ Ocurrió un error al interpretar la concentración seleccionada. Volvé a elegir el producto."
@@ -22,7 +25,7 @@ module.exports = async function cantidadYpago(userId, data, sock) {
     }
 
     // ✅ Verificar disponibilidad usando GetPedido
-    const hayStock = await GetPedido(principioSeleccionado, valorConcentracion, cantidad);
+    const hayStock = await GetPedido(productoDeseado.Pactivo, valorConcentracion, cantidad);
 
     if (!hayStock) {
         await sock.sendMessage(userId, {
@@ -36,6 +39,6 @@ module.exports = async function cantidadYpago(userId, data, sock) {
     });
 
     await FlowManager.setFlow(userId, "COMPRA", "eleccionMetodo", {
-        totalUnidades: cantidad
+        cantdeseada: cantidad
     });
 };

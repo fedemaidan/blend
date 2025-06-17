@@ -1,104 +1,6 @@
-const { Concentracion, Product } = require("../../../../models");
 const { getProductosPorConcentracionYPrincipioActivo } = require("../P-acticoConcentracion/obtenerPrincipio");
 const math = require('mathjs');
 
-async function calcularOferta(
-    principio_activo_elegido,
-    concentracion_principio_activo_elegido,
-    cantidad_principio_activo_ofrecido,
-    precio_acordado_principio_activo_ofrecido,
-    producto_ofrecido_por_cliente) {
-    const concentracionesElegidas = principio_activo_elegido.concentraciones.filter((concentracion) => concentracion.concentracion == concentracion_principio_activo_elegido);
-
-    const productosElegidos = concentracionesElegidas.sort((a, b) => b.producto.stock - a.producto.stock);
-    const productoElegido = productosElegidos[0].producto;
-    const precioTotal = precio_acordado_principio_activo_ofrecido * cantidad_principio_activo_ofrecido;
-
-    const productoPropio = await Product.findOne({ where: { producto_propio: true }, order: [['stock', 'DESC']] });
-
-    let { cantidadElegida, cantidadProductoPropio } = calcularCantidades(precioTotal, productoElegido, productoPropio, producto_ofrecido_por_cliente, precio_acordado_principio_activo_ofrecido);
-
-    if (isNaN(cantidadElegida) || isNaN(cantidadProductoPropio) || cantidadElegida <= 0 || cantidadProductoPropio <= 0) {
-        cantidadProductoPropio = 0;
-        cantidadElegida = precioTotal / productoElegido.precio;
-        cantidadElegida = Math.round(cantidadElegida)
-    }
-
-
-    const info_bot = {
-        cliente_aporta: {
-            producto: producto_ofrecido_por_cliente,
-            cantidad: cantidad_principio_activo_ofrecido,
-            precio_unitario: precio_acordado_principio_activo_ofrecido,
-        },
-        cliente_recibe: {
-            productos: [
-                {
-                    producto: productoPropio,
-                    cantidad: cantidadProductoPropio
-                },
-                {
-                    producto: productoElegido,
-                    cantidad: cantidadElegida
-                }
-            ]
-        },
-    };
-    console.log(info_bot)
-    return info_bot
-}
-//calcularCantidades(precioTotal, productosElegidos, producto_ofrecido_por_cliente, precio_acordado_principio_activo_ofrecido)
-function calcularCantidades(precioTotal, productoElegido, productoPropio, productoOfrecidoCliente, precioOperacionOfrecida) {
-    console.log(precioTotal, productoElegido, productoPropio, productoOfrecidoCliente, precioOperacionOfrecida)
-    // Parámetros y precios de los productos
-    const precioElegido = productoElegido.precio;
-    const precioOfrecidoCliente = productoOfrecidoCliente.precio;
-    const gananciaPorCadaUnidadDelRecibido = precioOfrecidoCliente - precioOperacionOfrecida;
-    const precioPropio = productoPropio.precio;
-    const rentabilidadPropio = (productoPropio.rentabilidad / 100);
-    const rentabilidadDeseada = 0.1;
-
-    // Matriz de coeficientes y términos independientes
-    const A = [
-        [precioPropio, precioElegido],
-        [precioPropio * rentabilidadPropio, gananciaPorCadaUnidadDelRecibido]
-    ];
-
-    const B = [precioTotal, rentabilidadDeseada * precioTotal];
-
-    console.log("A", A)
-    console.log("B", B)
-
-    //visualizar determinante de A <-Problema MATRIX sin inversa->
-    console.log('Matriz A:', A);
-    console.log('Determinante de A:', math.det(A));
-
-    // Resolver el sistema de ecuaciones // Si A es = 0 Usar aproximacion, caso contrario Lusolve!
-    let solution;  // Definimos la variable antes del if para ser utilizada mas adelante!
-
-    if (math.det(A) === 0) {
-        console.warn('La matriz A es singular, usando pseudoinversa...');
-        solution = math.multiply(math.pinv(A), B);
-
-        // presentar la solucion como lo haria Lusolve, para evitar que lea 0
-        solution = solution.map(x => [x]);
-
-        console.log('Solución con pseudoinversa:', solution);
-    } else {
-        solution = math.lusolve(A, B);
-        console.log('Solución exacta:', solution);
-    }
-
-    // Extraer los valores de C1 y C2
-    const cantidadProductoPropio = solution[0][0];
-    const cantidadElegida = solution[1][0];
-
-    // Convertimos los valores a enteros
-    return {
-        cantidadElegida: Math.round(cantidadElegida),
-        cantidadProductoPropio: Math.round(cantidadProductoPropio)
-    };
-}
 // || a partir de aqui son los propios de la funcionalidad de compra o ClientBuyerFlow:
 async function GetPedido(principioActivo, concentracion, cantidadSolicitada) {
     try {
@@ -127,119 +29,142 @@ async function GetPedido(principioActivo, concentracion, cantidadSolicitada) {
 }
 
 async function CalcularOfertaCompra(
-    principiocompra,
-    concentracioncompra,
-    cantidadDeseada,
-    cantidadOfrecida,
-    precioNegociado,
-    productoDeseado,
+    pactivoDeseado,
+    cantidadeseada,
+    cantidadpago,
+    preciopago,
+    pactivopago,
     productoPropio
 ) {
-    console.log("🔍 PARAMETROS RECIBIDOS:");
-    console.log("🧪 Principio compra:", principiocompra);
-    console.log("💧 Concentración compra:", concentracioncompra);
-    console.log("📦 Cantidad deseada:", cantidadDeseada);
-    console.log("📦 Cantidad ofrecida:", cantidadOfrecida);
-    console.log("💵 Precio negociado:", precioNegociado);
-    console.log("🎯 Producto deseado:", productoDeseado);
-    console.log("🧫 Producto propio:", productoPropio);
-
     const oferta = [];
 
-    if (!productoDeseado?.precio || isNaN(productoDeseado.precio)) {
-        console.error("❌ Error: Producto deseado inválido.");
-        return [];
-    }
+    console.log("♥♥♥ Inicio CalcularOfertaCompra ♥♥♥");
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto deseado:", pactivoDeseado);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Cantidad deseada:", cantidadeseada);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto pago:", pactivopago);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Cantidad pago:", cantidadpago);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Precio pago:", preciopago);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto propio:", productoPropio);
 
-    // ⚠️ Extraer precio y rentabilidad de productoBlend (pueden estar en distintos niveles)
-    const precioBlend = productoPropio?.precio ?? productoPropio?.producto?.precio;
-    const rentabilidadBlend = productoPropio?.rentabilidad ?? productoPropio?.producto?.rentabilidad;
+    console.log("♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥");
 
-    if (!precioBlend || !rentabilidadBlend) {
-        console.error("❌ Error: Producto Blend inválido o sin datos de rentabilidad/precio.");
-        return [];
-    }
+    // ✅ Extracción segura de precio y rentabilidad del producto blend
+    const precioBlend = parseFloat(productoPropio.principio_activo.precio)
+
+    const rentabilidadBlend = parseFloat(productoPropio.concentracion.rentabilidad);
 
     const rentabilidadDeseada = parseFloat(process.env.RENTABILIDAD_DESEADA || 0.3);
-    const precioDeseadoUnidad = parseFloat(productoDeseado.precio);
-    const precioOfrecidoUnidad = parseFloat(principiocompra.precio);
-    const precioNegociadoUnidad = parseFloat(precioNegociado);
+    const precioDeseadoUnidad = parseFloat(pactivoDeseado.precio);
+    const precioOfrecidoUnidad = parseFloat(pactivopago.precio);
+    const precioNegociadoUnidad = parseFloat(preciopago);
 
-    const valorDeseado = cantidadDeseada * precioDeseadoUnidad;
-    const valorOfrecido = cantidadOfrecida * precioNegociadoUnidad;
+    const valorDeseado = cantidadeseada * precioDeseadoUnidad;
+    const valorOfrecido = cantidadpago * precioNegociadoUnidad;
 
-    let gananciaEsperada = Math.max(valorDeseado, valorOfrecido) * rentabilidadDeseada;
-
-    // ✅ CORREGIDO: evitar duplicación de cantidadOfrecida
-    const diferenciaAPerder = Math.max(0, valorOfrecido - (precioOfrecidoUnidad * cantidadOfrecida));
+    const gananciaEsperada = Math.max(valorDeseado, valorOfrecido) * rentabilidadDeseada;
+    const diferenciaAPerder = Math.max(0, valorOfrecido - (precioOfrecidoUnidad * cantidadpago));
     const cuantoQuieroGanar = gananciaEsperada + diferenciaAPerder;
 
     const gananciaXProdBlend = precioBlend * rentabilidadBlend;
     const cantidadBlend = cuantoQuieroGanar / gananciaXProdBlend;
-
-    console.log("📊 Cálculos intermedios:");
-    console.log("   - Valor deseado:", valorDeseado);
-    console.log("   - Valor ofrecido:", valorOfrecido);
-    console.log("   - Ganancia esperada:", gananciaEsperada);
-    console.log("   - Diferencia a recuperar:", diferenciaAPerder);
-    console.log("   - Precio Blend:", precioBlend);
-    console.log("   - Rentabilidad Blend:", rentabilidadBlend);
-    console.log("   - Cantidad Blend necesaria:", Math.ceil(cantidadBlend));
+    const cantidadBlendFinal = Math.ceil(cantidadBlend);
+    const valorTotalBlend = cantidadBlendFinal * precioBlend;
 
     oferta.push({
+        tipo: "COMPRA",
+
         cliente_aporta: {
-            nombre_principio: principiocompra.nombre,
-            concentracion: concentracioncompra.concentracion,
-            cantidad: cantidadOfrecida,
-            precio_unitario: precioNegociadoUnidad
+            nombre_principio: pactivopago.nombre,
+            concentracion: pactivopago.concentracion,
+            cantidad: cantidadpago,
+            precio_unitario: precioNegociadoUnidad,
+            precio_ofrecido_unitario: precioOfrecidoUnidad,
+            valor_total_aportado: valorOfrecido
         },
+
         cliente_recibe: {
             productos: [
                 {
-                    producto: productoDeseado,
-                    cantidad: cantidadDeseada
+                    producto: pactivoDeseado,
+                    concentracion: pactivoDeseado.concentracion,
+                    cantidad: cantidadeseada,
+                    precio_unitario: precioDeseadoUnidad,
+                    valor_total: valorDeseado
                 },
                 {
-                    producto: productoPropio,
-                    cantidad: Math.ceil(cantidadBlend)
+                    producto: {
+                        id_principio_activo: productoPropio.principio_activo.id,
+                        principio: productoPropio.principio_activo.nombre,
+                        id_concentracion: productoPropio.concentracion.id,
+                        concentracion: productoPropio.concentracion.concentracion,
+                        rentabilidad: rentabilidadBlend,
+                        precio: precioBlend
+                    },
+                    cantidad: cantidadBlendFinal,
+                    precio_unitario: precioBlend,
+                    rentabilidad: rentabilidadBlend,
+                    valor_total: valorTotalBlend
                 }
             ]
+        },
+
+        resumen_operacion: {
+            valor_total_deseado: valorDeseado,
+            valor_total_aportado: valorOfrecido,
+            valor_total_blend: valorTotalBlend,
+            precio_deseado_unitario: precioDeseadoUnidad,
+            precio_pago_unitario: precioOfrecidoUnidad,
+            precio_negociado_unitario: precioNegociadoUnidad,
+            precio_blend_unitario: precioBlend,
+            rentabilidad_blend: rentabilidadBlend,
+            ganancia_esperada: gananciaEsperada,
+            diferencia_a_recuperar: diferenciaAPerder,
+            cantidad_blend_calculada: cantidadBlendFinal,
+            resultado_final: valorOfrecido - (valorDeseado + valorTotalBlend)
         }
     });
-
-    console.log("♥♥♥ Fin CalcularOfertaCompra ♥♥♥\n");
 
     return oferta;
 }
 
 async function CalcularOfertaVenta(
     principiocompra,
-    concentracioncompra,
     cantidadDeseada,
     cantidadOfrecida,
     precioNegociado,
     productoDeseado,
     productoPropio
 ) {
-    console.log("🔍 PARAMETROS RECIBIDOS:");
-    console.log("🧪 Principio compra:", principiocompra);
-    console.log("💧 Concentración compra:", concentracioncompra);
-    console.log("📦 Cantidad deseada:", cantidadDeseada);
-    console.log("📦 Cantidad ofrecida:", cantidadOfrecida);
-    console.log("💵 Precio negociado:", precioNegociado);
-    console.log("🎯 Producto deseado:", productoDeseado);
-    console.log("🧫 Producto propio:", productoPropio);
-
     const oferta = [];
+
+    console.log("♥♥♥ Inicio CalcularOfertaCompra ♥♥♥");
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto deseado:", principiocompra);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto pago:", cantidadDeseada);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Cantidad pago:", cantidadOfrecida);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Precio pago:", precioNegociado);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto propio:", productoDeseado);
+    console.log("🔍---------------------------------------------------------------🔍");
+    console.log("   - Producto propio:", productoPropio);
+    console.log("♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥♥");
 
     if (!productoDeseado?.precio || isNaN(productoDeseado.precio)) {
         console.error("❌ Error: Producto deseado inválido.");
         return [];
     }
 
-    // ⚠️ Extraer precio y rentabilidad de productoBlend (pueden estar en distintos niveles)
-    const precioBlend = productoPropio?.precio ?? productoPropio?.producto?.precio;
-    const rentabilidadBlend = productoPropio?.rentabilidad ?? productoPropio?.producto?.rentabilidad;
+    const precioBlend = parseFloat(productoPropio?.principio_activo?.precio);
+    const rentabilidadBlend = parseFloat(productoPropio?.concentracion?.rentabilidad);
 
     if (!precioBlend || !rentabilidadBlend) {
         console.error("❌ Error: Producto Blend inválido o sin datos de rentabilidad/precio.");
@@ -254,90 +179,70 @@ async function CalcularOfertaVenta(
     const valorDeseado = cantidadDeseada * precioDeseadoUnidad;
     const valorOfrecido = cantidadOfrecida * precioNegociadoUnidad;
 
-    let gananciaEsperada = Math.max(valorDeseado, valorOfrecido) * rentabilidadDeseada;
-
-    // ✅ CORREGIDO: evitar duplicación de cantidadOfrecida
+    const gananciaEsperada = Math.max(valorDeseado, valorOfrecido) * rentabilidadDeseada;
     const diferenciaAPerder = Math.max(0, valorOfrecido - (precioOfrecidoUnidad * cantidadOfrecida));
     const cuantoQuieroGanar = gananciaEsperada + diferenciaAPerder;
 
     const gananciaXProdBlend = precioBlend * rentabilidadBlend;
     const cantidadBlend = cuantoQuieroGanar / gananciaXProdBlend;
-
-    console.log("📊 Cálculos intermedios:");
-    console.log("   - Valor deseado:", valorDeseado);
-    console.log("   - Valor ofrecido:", valorOfrecido);
-    console.log("   - Ganancia esperada:", gananciaEsperada);
-    console.log("   - Diferencia a recuperar:", diferenciaAPerder);
-    console.log("   - Precio Blend:", precioBlend);
-    console.log("   - Rentabilidad Blend:", rentabilidadBlend);
-    console.log("   - Cantidad Blend necesaria:", Math.ceil(cantidadBlend));
+    const cantidadBlendFinal = Math.ceil(cantidadBlend);
+    const valorTotalBlend = cantidadBlendFinal * precioBlend;
 
     oferta.push({
+        tipo: "VENTA",
+
         cliente_aporta: {
             nombre_principio: principiocompra.nombre,
-            concentracion: concentracioncompra.concentracion,
+            concentracion: principiocompra.concentracion,
             cantidad: cantidadOfrecida,
-            precio_unitario: precioNegociadoUnidad
+            precio_unitario: precioNegociadoUnidad,
+            precio_referencia: precioOfrecidoUnidad,
+            valor_total_aportado: valorOfrecido
         },
+
         cliente_recibe: {
             productos: [
                 {
                     producto: productoDeseado,
-                    cantidad: cantidadDeseada
+                    concentracion: productoDeseado.concentracion,
+                    cantidad: cantidadDeseada,
+                    precio_unitario: precioDeseadoUnidad,
+                    valor_total: valorDeseado
                 },
                 {
-                    producto: productoPropio,
-                    cantidad: Math.ceil(cantidadBlend)
+                    producto: {
+                        id_principio_activo: productoPropio.principio_activo.id,
+                        principio: productoPropio.principio_activo.nombre,
+                        id_concentracion: productoPropio.concentracion.id,
+                        concentracion: productoPropio.concentracion.concentracion,
+                        rentabilidad: rentabilidadBlend,
+                        precio: precioBlend
+                    },
+                    cantidad: cantidadBlendFinal,
+                    precio_unitario: precioBlend,
+                    rentabilidad: rentabilidadBlend,
+                    valor_total: valorTotalBlend
                 }
             ]
+        },
+
+        resumen_operacion: {
+            valor_total_deseado: valorDeseado,
+            valor_total_aportado: valorOfrecido,
+            valor_total_blend: valorTotalBlend,
+            precio_deseado_unitario: precioDeseadoUnidad,
+            precio_pago_unitario: precioOfrecidoUnidad,
+            precio_negociado_unitario: precioNegociadoUnidad,
+            precio_blend_unitario: precioBlend,
+            rentabilidad_blend: rentabilidadBlend,
+            ganancia_esperada: gananciaEsperada,
+            diferencia_a_recuperar: diferenciaAPerder,
+            cantidad_blend_calculada: cantidadBlendFinal,
+            resultado_final: valorOfrecido - (valorDeseado + valorTotalBlend)
         }
     });
-
-    console.log("♥♥♥ Fin CalcularOfertaVenta ♥♥♥\n");
 
     return oferta;
 }
 
-
-
-
-async function calcularCantidadesCompra(
-    cantidadDeseada,          // Cantidad fija del producto que el cliente quiere recibir
-    productoRecibido,         // Producto que se desea recibir (ej: GLIFOSATO)
-    productoPropio,           // Producto propio para complementar la oferta (si aplica)
-    productoPago,             // Producto con el que el cliente paga (ej: ATRAZINA)
-    precioNegociado,          // Precio unitario negociado para el producto de pago
-    margenDeseado = 0.1       // Margen deseado, por defecto 10%
-) {
-    // Precios
-    const precioRecibido = productoRecibido.precio;     // Precio del producto recibido
-    const precioPago = productoPago.precio;             // Precio del producto de pago
-    const precioPropio = productoPropio.precio;         // Precio del producto propio
-
-    // Valor fijo de lo que el cliente debe recibir (sin aporte extra)
-    const V_recibidoFijo = cantidadDeseada * precioRecibido;
-
-    // Calcular cantidad mínima de producto de pago para cubrir al menos el valor fijo
-    const Q_pago_min = V_recibidoFijo / ((1 - margenDeseado) * precioPago);
-    const Q_pago = Math.ceil(Q_pago_min); // Redondeamos hacia arriba para garantizar el margen
-
-    // Valor pagado total en producto de pago
-    const V_pagado = Q_pago * precioPago;
-    // Valor que se debe entregar, de acuerdo al margen deseado
-    const V_entregado = (1 - margenDeseado) * V_pagado;
-
-    // Calcular cuánto producto propio es necesario para completar el valor entregado
-    let cantidadPropio = 0;
-    if (V_entregado > V_recibidoFijo) {
-        cantidadPropio = (V_entregado - V_recibidoFijo) / precioPropio;
-    }
-    cantidadPropio = Math.round(cantidadPropio);
-
-    return {
-        cantidadPago: Q_pago,          // Cantidad de producto de pago que aporta el cliente
-        cantidadRecibida: cantidadDeseada, // Cantidad fija del producto que se recibe
-        cantidadPropio: cantidadPropio // Cantidad de producto propio a agregar para cumplir el margen
-    };
-}
-
-module.exports = {calcularOferta, GetPedido, CalcularOfertaCompra, CalcularOfertaVenta }
+module.exports = { GetPedido, CalcularOfertaCompra, CalcularOfertaVenta }

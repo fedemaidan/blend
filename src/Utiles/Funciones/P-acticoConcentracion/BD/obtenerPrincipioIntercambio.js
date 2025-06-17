@@ -1,8 +1,9 @@
+const { Op } = require('sequelize');
 const { PrincipioActivo, Concentracion, Product } = require('../../../../../models');
 
-module.exports = async function ObtenerPrincipiosBlend() {
+module.exports = async function obtenerPrincipioIntercambio() {
   try {
-    const principiosBlend = await PrincipioActivo.findAll({
+    const principios = await PrincipioActivo.findAll({
       where: { activo: true },
       include: {
         model: Concentracion,
@@ -12,21 +13,17 @@ module.exports = async function ObtenerPrincipiosBlend() {
           model: Product,
           as: 'producto',
           where: {
-            producto_propio: true,
-            activo: true
+            activo: true,
+            producto_propio: false // 🔥 EXCLUYE productos propios
           },
           required: true
         }
-      },
-      order: [
-        ['nombre', 'ASC'],
-        [{ model: Concentracion, as: 'concentraciones' }, { model: Product, as: 'producto' }, 'activos', 'ASC']
-      ]
+      }
     });
 
     const principiosMap = new Map();
 
-    for (const principio of principiosBlend) {
+    for (const principio of principios) {
       const nombre = principio.nombre.trim();
 
       if (!principiosMap.has(nombre)) {
@@ -49,13 +46,10 @@ module.exports = async function ObtenerPrincipiosBlend() {
 
       for (const conc of principio.concentraciones || []) {
         const valor = parseFloat(conc.concentracion);
-        const rentabilidad = conc.producto?.rentabilidad ?? null;
-
         if (!agrupado.concentraciones.has(valor)) {
           agrupado.concentraciones.set(valor, {
             id: conc.id,
-            concentracion: valor,
-            rentabilidad: rentabilidad
+            concentracion: valor
           });
         }
       }
@@ -66,7 +60,7 @@ module.exports = async function ObtenerPrincipiosBlend() {
       concentraciones: Array.from(pa.concentraciones.values())
     }));
   } catch (error) {
-    console.error('❌ Error al obtener principios activos de blend:', error);
-    throw new Error('No se pudo obtener la información de blend.');
+    console.error("❌ Error al obtener principios activos (sin productos propios):", error);
+    throw new Error("No se pudieron obtener los principios activos para el intercambio.");
   }
 };

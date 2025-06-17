@@ -3,7 +3,9 @@ const opcionConcentracion = require('../../../Utiles/Chatgpt/opcionConcentracion
 
 module.exports = async function seleccionarConcentracion(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const { concentraciones, PrincipioClieVen } = flowData;
+    const { concentraciones, PrincipioSeleccionado } = flowData;
+
+    console.log("concentraciones", concentraciones);
 
     const seleccionGPT = await opcionConcentracion(data, concentraciones);
 
@@ -33,10 +35,13 @@ module.exports = async function seleccionarConcentracion(userId, data, sock) {
         text: `💵 ¿A qué precio querés vender el producto? Indicá un número.`
     });
 
+    PrincipioSeleccionado.concentracion = seleccion.concentracion;
+
     FlowManager.setFlow(userId, "VENTA", "NegociarPrecioPago", {
-        PrincipioClieVen,
-        concentracionSeleccionada: seleccion,
-        principiocompra: PrincipioClieVen,
-        concentracioncompra: seleccion
+        productoVenta: {
+            Pactivo: PrincipioSeleccionado,
+            precio: parseFloat(PrincipioSeleccionado.precio),
+            concentracion: seleccion.concentracion,
+        },
     });
 };

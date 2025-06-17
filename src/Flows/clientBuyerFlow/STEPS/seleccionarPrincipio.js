@@ -35,7 +35,7 @@ module.exports = async function seleccionarPrincipio(userId, data, sock) {
     await sock.sendMessage(userId, { text: msg });
 
     FlowManager.setFlow(userId, "COMPRA", "seleccionarConcentracion", {
-        principioSeleccionado: principioReal, // ✅ tiene ID
+        principioCompra: principioReal, // ✅ tiene ID
         concentraciones
     });
 };

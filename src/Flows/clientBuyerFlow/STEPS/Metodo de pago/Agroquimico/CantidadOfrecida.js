@@ -14,7 +14,7 @@ module.exports = async function cantidadYpago(userId, data, sock) {
         text: `✅ Perfecto, ${cantidad} unidad(es) del principio activo seleccionado.\n\n🛒`
     });
 
-    await FlowManager.setFlow(userId, "BLEND", "eleccionBlend", {...flowData, totaOfrecido: cantidad});
+    await FlowManager.setFlow(userId, "BLEND", "eleccionBlend", {...flowData, cantpago: cantidad});
 
     await mostrarBlend(userId,sock)
 };

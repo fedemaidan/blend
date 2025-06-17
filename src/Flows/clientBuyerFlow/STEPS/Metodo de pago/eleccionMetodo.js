@@ -15,13 +15,13 @@ module.exports = async function eleccionMetodo(userId, data, sock) {
 
         const principioscompra = await getPrincipiosActivosAceptados();
 
-        const msg = '📋 Aquí están los principios activos en los cuales nos puedes pagar:\n' +
-            principioscompra.map((p, i) => `${i + 1}. ${p.nombre}`).join('\n') +
-            '\n\nPor favor, responde con el número de tu elección.';
+       const msg = '📋 Aquí están los principios activos en los cuales nos puedes pagar:\n' +
+    principioscompra.map((p, i) => `${i + 1}. ${p.principio_activo.nombre}`).join('\n') +
+    '\n\nPor favor, responde con el número de tu elección.';
 
         await sock.sendMessage(userId, { text: msg });
 
-        await FlowManager.setFlow(userId, "COMPRA", "SeleccionarPrincipioPago", { principioscompra });
+        await FlowManager.setFlow(userId, "COMPRA", "SeleccionarPrincipioPago", { principiosPago: principioscompra });
     }
     else if (input.data.Eleccion == 2)
     {

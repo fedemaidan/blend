@@ -2,20 +2,28 @@ const FlowManager = require('../../../FlowControl/FlowManager');
 const opcionPrincipio = require('../../../Utiles/Chatgpt/opcionPrincipio');
 
 module.exports = async function seleccionarPrincipio(userId, data, sock) {
-    const { PrincipiosClieVen } = FlowManager.userFlows[userId]?.flowData;
+    const { Principios } = FlowManager.userFlows[userId]?.flowData;
 
-    const seleccionGPT = await opcionPrincipio(data, PrincipiosClieVen);
+    // 🔧 Transformar la estructura para que cada opción tenga .nombre en la raíz
+    const opcionesPrincipios = Principios.map(p => ({
+        ...p.principio_activo,
+        concentraciones: p.concentraciones
+    }));
+
+    const seleccionGPT = await opcionPrincipio(data, opcionesPrincipios);
 
     if (!seleccionGPT || !seleccionGPT.nombre) {
-        await sock.sendMessage(userId, { text: "❌ No entendimos tu elección. Por favor, respondé con el número o nombre del principio activo." });
+        await sock.sendMessage(userId, {
+            text: "❌ No entendimos tu elección. Por favor, respondé con el número o nombre del principio activo."
+        });
         return;
     }
 
-    const PrincipioClieVen = seleccionGPT;
-    const concentraciones = PrincipioClieVen.concentraciones || [];
+    const PrincipioSeleccionado = seleccionGPT;
+    const concentraciones = PrincipioSeleccionado.concentraciones || [];
 
     await sock.sendMessage(userId, {
-        text: `✅ Has seleccionado el principio activo: *${PrincipioClieVen.nombre}*.`
+        text: `✅ Has seleccionado el principio activo: *${PrincipioSeleccionado.nombre}*.`
     });
 
     const msg = '📊 Elige la concentración disponible para este principio activo. Estas son las opciones:\n' +
@@ -24,8 +32,8 @@ module.exports = async function seleccionarPrincipio(userId, data, sock) {
 
     await sock.sendMessage(userId, { text: msg });
 
-    FlowManager.setFlow(userId, "VENTA", "seleccionarConcentracion", {
-        PrincipioClieVen,
+    await FlowManager.setFlow(userId, "VENTA", "seleccionarConcentracion", {
+        PrincipioSeleccionado,
         concentraciones
     });
 };

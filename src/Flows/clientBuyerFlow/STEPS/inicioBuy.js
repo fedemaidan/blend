@@ -1,8 +1,8 @@
 const FlowManager = require('../../../FlowControl/FlowManager');
-const { getPrincipiosActivosDisponibles } = require('../../../Utiles/Funciones/P-acticoConcentracion/obtenerPrincipio');
+const obtenerPrincipiosConStock  = require('../../../Utiles/Funciones/P-acticoConcentracion/BD/obtenerPrincipiosConStock');
 
 module.exports = async function inicioBuy(userId, data, sock) {
-    const principios = await getPrincipiosActivosDisponibles();
+    const principios = await obtenerPrincipiosConStock();
 
     principios.forEach((p, index) => {
         const pa = p.principio_activo;
@@ -24,5 +24,5 @@ module.exports = async function inicioBuy(userId, data, sock) {
 
     await sock.sendMessage(userId, { text: msg });
 
-    FlowManager.setFlow(userId, "COMPRA", "seleccionarPrincipio", { principios });
+    FlowManager.setFlow(userId, "COMPRA", "seleccionarPrincipio", { principios, flow: "COMPRA"});
 };

@@ -2,7 +2,7 @@ const FlowManager = require('../../../../FlowControl/FlowManager');
 
 module.exports = async function cantidadYpago(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const { PrincipioClieVen, concentracionSeleccionada, precio } = flowData;
+    const { productoVenta } = flowData;
 
     const cantidad = parseFloat(data);
     if (isNaN(cantidad) || cantidad <= 0) {
@@ -10,7 +10,7 @@ module.exports = async function cantidadYpago(userId, data, sock) {
         return;
     }
 
-    const valorConcentracion = parseFloat(concentracionSeleccionada?.concentracion);
+    const valorConcentracion = parseFloat(productoVenta.concentracion);
     if (isNaN(valorConcentracion)) {
         await sock.sendMessage(userId, {
             text: "❌ Ocurrió un error al interpretar la concentración seleccionada. Volvé a elegir el producto."
@@ -24,6 +24,6 @@ module.exports = async function cantidadYpago(userId, data, sock) {
 
     FlowManager.setFlow(userId, "VENTA", "eleccionMetodo", {
         ...flowData,
-        totalUnidades: cantidad
+        CantVenta: cantidad
     });
 };

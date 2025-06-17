@@ -2,15 +2,13 @@ const FlowManager = require("../../FlowControl/FlowManager");
 const MostrarOfertaGenerada = require('../../Utiles/Funciones/P-acticoConcentracion/MostrarOfertaGenerada');
 
 module.exports = async function eleccionBlend(userId, data, sock) {
-
     const seleccion = parseInt(data);
-
     const flowData = FlowManager.userFlows[userId]?.flowData;
-
+    const { flow } = flowData;
     const productosBlend = flowData.productosBlend;
 
-    console.log("FLOW DATA EN ELECCION BLEND.")
-    console.log(flowData)
+    console.log("FLOW DATA EN ELECCION BLEND.");
+    console.log(flowData);
 
     if (!productosBlend || productosBlend.length === 0) {
         await sock.sendMessage(userId, {
@@ -28,18 +26,13 @@ module.exports = async function eleccionBlend(userId, data, sock) {
 
     const productoSeleccionado = productosBlend[seleccion - 1];
 
-    const flujoActual = flowData.flowName
-    console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅")
-    console.log(flujoActual)
-    console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅")
-
-    await FlowManager.setFlow(userId, flujoActual, "AceptarOferta", {
+    await FlowManager.setFlow(userId, flow, "AceptarOferta", {
         ...flowData,
         productoBlendSeleccionado: productoSeleccionado,
     });
 
     await sock.sendMessage(userId, {
-        text: `✅ Seleccionaste Principio activo: *${productoSeleccionado.principio}*`,
+        text: `✅ Seleccionaste Principio activo: *${productoSeleccionado.principio_activo.nombre}*`,
     });
 
     await MostrarOfertaGenerada(userId, sock);

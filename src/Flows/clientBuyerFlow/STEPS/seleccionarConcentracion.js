@@ -3,7 +3,7 @@ const opcionConcentracion = require('../../../Utiles/Chatgpt/opcionConcentracion
 
 module.exports = async function seleccionarConcentracion(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const { concentraciones, principioSeleccionado } = flowData;
+    const { concentraciones, principioCompra } = flowData;
 
     // GPT devuelve un objeto con sólo la propiedad .concentracion
     const seleccionGPT = await opcionConcentracion(data, concentraciones);
@@ -34,14 +34,13 @@ module.exports = async function seleccionarConcentracion(userId, data, sock) {
     const msg = `⚠️ Los pedidos son armados en base a su concentración y principio activo, por lo cual un pedido puede tener más de una marca.\n\n📦 ¿Cuántas unidades (litros, kilos, gramos, packs) quieres adquirir? Por favor, responde con la cantidad.`;
     await sock.sendMessage(userId, { text: msg });
 
+    principioCompra.concentracion = seleccion.concentracion;
+
  FlowManager.setFlow(userId, "COMPRA", "cantidadYpago", {
-    principioSeleccionado,
-    concentracionSeleccionada: seleccion,
     productoDeseado: {
-        activos: principioSeleccionado.nombre,
-        precio: parseFloat(principioSeleccionado.precio),
-        marca: "Marca N/A",     // si no lo tenés, podés poner algo por defecto
-        empresa: "Empresa N/A"
+        Pactivo: principioCompra,
+        precio: parseFloat(principioCompra.precio),
+        concentracion: seleccion.concentracion,
     }
 });
 };
