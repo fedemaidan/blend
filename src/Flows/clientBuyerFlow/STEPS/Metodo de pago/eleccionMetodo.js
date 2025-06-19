@@ -1,7 +1,7 @@
 const FlowManager = require('../../../../FlowControl/FlowManager');
 const opcionMetodoPago = require('../../../../Utiles/Chatgpt/opcionMetodoPago');
 const { getPrincipiosActivosAceptados } = require('../../../../Utiles/Funciones/P-acticoConcentracion/obtenerPrincipio');
-
+const MostrarOfertaEfectivo = require('../../../../Utiles/Funciones/P-acticoConcentracion/MostratOfertaGeneradaEfete');
 module.exports = async function eleccionMetodo(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
 
@@ -20,12 +20,13 @@ module.exports = async function eleccionMetodo(userId, data, sock) {
     '\n\nPor favor, responde con el número de tu elección.';
 
         await sock.sendMessage(userId, { text: msg });
-
         await FlowManager.setFlow(userId, "COMPRA", "SeleccionarPrincipioPago", { principiosPago: principioscompra });
     }
     else if (input.data.Eleccion == 2)
     {
-        await sock.sendMessage(userId, { text: '🔬 Te estamos transfiriendo con un especialista en el área.' });
+        await sock.sendMessage(userId, { text: '🔬 *Procesando*.' });
+        await MostrarOfertaEfectivo(userId, sock);
+
     }
     else if (input.data.Eleccion == 3)
     {

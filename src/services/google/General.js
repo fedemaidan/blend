@@ -219,4 +219,18 @@ async function cloneGoogleSheet(fileId, newTitle, folderId) {
     }
 }
 
-module.exports = { updateSheetWithBatchDelete, checkEditPermissions, updateRow, createSheet, checkIfSheetExists, addRow, cloneGoogleSheet };
+async function getSheetData(sheetId, range) {
+    try {
+        const res = await sheets.spreadsheets.values.get({
+            spreadsheetId: sheetId,
+            range,
+        });
+
+        return res.data.values || [];
+    } catch (err) {
+        console.error('Error leyendo datos del sheet:', err);
+        return [];
+    }
+}
+
+module.exports = { updateSheetWithBatchDelete, checkEditPermissions, updateRow, createSheet, checkIfSheetExists, addRow, cloneGoogleSheet, getSheetData };

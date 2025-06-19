@@ -1,9 +1,9 @@
-const ObtenerPrincipiosBlend = require("./P-acticoConcentracion/BD/ObtenerPrincipiosBlend");
+const {getPrincipiosBlend} = require("../Funciones/P-acticoConcentracion/obtenerPrincipio");
 const FlowManager = require("../../FlowControl/FlowManager");
 
 module.exports = async function mostrarBlend(userId, sock) {
   const flowData = FlowManager.userFlows[userId]?.flowData;
-  const productosBlend = await ObtenerPrincipiosBlend();
+  const productosBlend = await getPrincipiosBlend();
 
   if (!productosBlend || productosBlend.length === 0) {
     await sock.sendMessage(userId, {

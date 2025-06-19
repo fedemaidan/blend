@@ -23,7 +23,8 @@ module.exports = async function eleccionMetodo(userId, data, sock) {
         });
     }
     else if (input.data.Eleccion == 2) {
-        await sock.sendMessage(userId, { text: '🔬 Te estamos transfiriendo con un especialista en el área.' });
+         await sock.sendMessage(userId, { text: '🔬 *Procesando*.' });
+         await MostrarOfertaEfectivo(userId, sock);
     }
     else if (input.data.Eleccion == 3) {
         await sock.sendMessage(userId, { text: '❌ Cancelando operación.' });
