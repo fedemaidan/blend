@@ -1,11 +1,7 @@
 require("dotenv").config();
 const connectToWhatsApp = require("./src/services/Mensajes/whatsapp");
-const getMessageType = require("./src/services/Mensajes/GetType");
-const messageResponder = require("./src/services/Mensajes/messageResponder");
-const socketSingleton = require("./src/services/SockSingleton/sockSingleton");
 const QRCode = require("qrcode");
 const cors = require("cors");
-// Importa Express para exponer el QR vía web
 const express = require("express");
 const apiRoutes = require("./src/routes/routes");
 
@@ -20,55 +16,35 @@ const corsOptions = {
   optionsSuccessStatus: 200,
 };
 
-app.use(cors(corsOptions)); // Permitir CORS
-
-// Procesamiento de JSON
+app.use(cors(corsOptions));
 app.use(express.json());
-
-// Usar las rutas de la API
 app.use("/api", apiRoutes);
 
-// Variable para almacenar el último QR generado (si se requiere)
+// 🔄 Variable compartida para el QR (movida arriba para compartir)
 let latestQR = null;
+const setLatestQR = (qr) => { latestQR = qr; };
+const getLatestQR = () => latestQR;
 
-// Ruta para mostrar el QR en un navegador
 app.get("/qr", (req, res) => {
-  
-  if (!latestQR) {
+  const qr = getLatestQR();
+  if (!qr) {
     return res.send("QR no generado aún. Espera...");
   }
-  // Genera una imagen en base64 del QR y la envía al navegador
-  QRCode.toDataURL(latestQR, (err, url) => {
-    console.log(latestQR)
+  QRCode.toDataURL(qr, (err, url) => {
     if (err) return res.status(500).send("Error generando QR");
     res.send(`<img src="${url}" style="width:300px;">`);
   });
 });
 
 const startBot = async () => {
-  const sock = await connectToWhatsApp((qr) => {
-    latestQR = qr; // Esto actualiza la variable externa
+  const sock = await connectToWhatsApp(setLatestQR); // ✅ Le pasamos el setter del QR
+  setInterval(() => console.log('Keep-alive'), 5 * 60 * 1000);
+  
+  app.listen(port, () => {
+    console.log(`Servidor corriendo en http://localhost:${port}/qr`);
+    console.log(`- API disponible en http://localhost:${port}/api/`);
+    console.log(`- QR disponible en http://localhost:${port}/qr`);
   });
-  await socketSingleton.setSock(sock);
-
-  sock.ev.on("messages.upsert", async (message) => {
-    const msg = message.messages[0];
-    if (!msg.message || msg.key.fromMe) return;
-
-    const sender = msg.key.remoteJid;
-    const messageType = getMessageType(msg.message);
-
-    await messageResponder(messageType, msg, sock, sender);
-  });
-
-  setInterval(() => console.log("Keep-alive"), 5 * 60 * 1000);
-  setInterval(() => sock.sendPresenceUpdate("available"), 10 * 60 * 1000);
 };
-
-app.listen(port, () => {
-  console.log(`Servidor corriendo en http://localhost:${port}/qr`);
-  console.log(`- API disponible en http://localhost:${port}/api/`);
-  console.log(`- QR disponible en http://localhost:${port}/qr`);
-});
 
 startBot();

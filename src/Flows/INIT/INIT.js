@@ -16,7 +16,9 @@ const defaultFlow = {
 
             //Esta logica viene de que si el mensaje es una imagen o un pdf, ya se proceso anteriormente, no hace falta volver a hacerlo.
             if (messageType == "text" || messageType == "text_extended" || messageType == "audio") {
-                result = await analizarIntencion(message, userId);
+                //result = await analizarIntencion(message, userId);
+                MenuFlow.start(userId, { data: "hh" }, sock);
+                return;
             }
             else {
                 result = message;
