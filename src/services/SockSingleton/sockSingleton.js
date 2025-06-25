@@ -1,5 +1,5 @@
 const messageResponder = require("../Mensajes/messageResponder");
-//const autoReporter = require("baileys-status-reporter");
+const autoReporter = require("baileys-status-reporter");
 const GetType = require("../Mensajes/GetType");
 class SockSingleton {
     constructor() {
@@ -12,8 +12,8 @@ class SockSingleton {
     async setSock(sockInstance) {
         this.sock = sockInstance;
 
-    //autoReporter.startAutoReport(this.sock,"BLEND","http://host.docker.internal:4000/api/reportar");
-
+    autoReporter.startAutoReport(this.sock,"BLEND","http://host.docker.internal:4000/api/reportar");
+    
         this.sock.ev.on('messages.upsert', async (message) => {
             
             if (message.type === 'notify') {
