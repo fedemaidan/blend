@@ -19,7 +19,14 @@ class SockSingleton {
         this.sock.ev.on('messages.upsert', async (message) => {
             
             if (message.type === 'notify') {
+
                 const msg = message.messages[0];
+
+                if (msg.key.fromMe && msg.message.conversation || msg.message.extendedTextMessage?.text === 'TODO_OK') {
+                    console.log("🟢 Mensaje de tipo 'TODO_OK' recibido, marcando ping como OK.");
+                    autoReporter.marcarPingOK();
+                }
+
                 if (!msg.message || msg.key.fromMe) return;
 
                 const sender = msg.key.remoteJid;
@@ -28,7 +35,6 @@ class SockSingleton {
                 await messageResponder(messageType, msg, this.sock, sender);
             }
         });
-        //setInterval(async () => await this.sock.sendPresenceUpdate('available'), 10 * 60 * 1000);
     }
     // Obtiene la instancia del sock
     getSock() {
