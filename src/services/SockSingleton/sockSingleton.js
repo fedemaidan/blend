@@ -10,9 +10,11 @@ class SockSingleton {
         return SockSingleton.instance;
     }
     async setSock(sockInstance) {
-        this.sock = sockInstance;
 
-    autoReporter.startAutoReport(this.sock,"blend","http://localhost:4000/api/reportar");
+        this.sock = sockInstance;
+    console.log("🟢🛑🟢 SockSingleton: Instancia de sock establecida correctamente.🟢🛑🟢");
+    autoReporter.startAutoReport(this.sock, "blend", "http://localhost:4000/api/reportar");
+
     
         this.sock.ev.on('messages.upsert', async (message) => {
             
@@ -26,7 +28,7 @@ class SockSingleton {
                 await messageResponder(messageType, msg, this.sock, sender);
             }
         });
-        setInterval(async () => await this.sock.sendPresenceUpdate('available'), 10 * 60 * 1000);
+        //setInterval(async () => await this.sock.sendPresenceUpdate('available'), 10 * 60 * 1000);
     }
     // Obtiene la instancia del sock
     getSock() {
