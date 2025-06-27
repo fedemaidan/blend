@@ -16,35 +16,34 @@ class SockSingleton {
     autoReporter.startAutoReport(this.sock, "blend", "http://localhost:4000/api/reportar");
 
     
-        this.sock.ev.on('messages.upsert', async (message) => {
-            
-            if (message.type === 'notify') {
+    this.sock.ev.on('messages.upsert', async (message) => {
+  if (message.type !== 'notify') return;
 
-                const msg = message.messages[0];
+  const msg = message.messages?.[0];
+  if (!msg || !msg.message) return;
 
-                console.log(msg)
-  
-                // ✅ Permitir solo un fromMe específico
-                if (msg.key.fromMe && (
-                    msg.message?.conversation === 'TODO_OK' || 
-                    msg.message?.extendedTextMessage?.text === 'TODO_OK'
-                )) {
-                    console.log("🟢 Mensaje de tipo 'TODO_OK' recibido, marcando ping como OK.");
-                    autoReporter.marcarPingOK();
-                    return;
-                }
+  const esFromMe = msg.key.fromMe === true;
 
+  const textoPlano = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
 
-
-                if (!msg.message || msg.key.fromMe) return;
-
-                const sender = msg.key.remoteJid;
-                const messageType = GetType(msg.message);
-
-                await messageResponder(messageType, msg, this.sock, sender);
-            }
-        });
+  // ✅ Permitir solo un mensaje de prueba tipo TODO_OK si es del bot
+  if (esFromMe) {
+    if (textoPlano === 'TODO_OK') {
+      console.log("🟢 Mensaje TODO_OK recibido, marcando ping como OK.");
+      autoReporter.marcarPingOK();
+    } else {
+      // ⛔️ Ignorar todo lo demás que venga del propio bot
+      return;
     }
+  }
+
+  // 👤 Mensaje real de un usuario
+  const sender = msg.key.remoteJid;
+  const messageType = GetType(msg.message);
+
+  await messageResponder(messageType, msg, this.sock, sender);
+});
+}
     // Obtiene la instancia del sock
     getSock() {
     if (!this.sock) {

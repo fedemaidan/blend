@@ -7,6 +7,7 @@ const connectToWhatsApp = async (setQR) => {
   const sock = makeWASocket({
     auth: state,
     printQRInTerminal: true,
+    emitOwnEvents: true,
   });
 
   sock.ev.on('connection.update', (update) => {
