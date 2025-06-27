@@ -22,18 +22,19 @@ class SockSingleton {
 
                 const msg = message.messages[0];
 
-
-                console.log("🟢 Mensaje recibido from me:", msg.key.fromMe);
-                console.log("🟢 Mensaje recibido:", msg.message.conversation);
-
-                console.log("🟢🟢🟢🟢🟢🟢🟢🟢🟢");
-                console.log("🟢 Mensaje recibido:", msg.message.extendedTextMessage?.text);
-
-                if (msg.key.fromMe && msg.message.conversation  === 'TODO_OK'  || msg.message.extendedTextMessage?.text === 'TODO_OK') {
+  
+                // ✅ Permitir solo un fromMe específico
+                if (msg.key.fromMe && (
+                    msg.message?.conversation === 'TODO_OK' || 
+                    msg.message?.extendedTextMessage?.text === 'TODO_OK'
+                )) {
                     console.log("🟢 Mensaje de tipo 'TODO_OK' recibido, marcando ping como OK.");
                     autoReporter.marcarPingOK();
+                    return;
                 }
 
+
+                
                 if (!msg.message || msg.key.fromMe) return;
 
                 const sender = msg.key.remoteJid;
