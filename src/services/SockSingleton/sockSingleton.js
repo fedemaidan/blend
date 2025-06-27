@@ -22,20 +22,22 @@ class SockSingleton {
   const msg = message.messages?.[0];
   if (!msg || !msg.message) return;
 
-  const esFromMe = msg.key.fromMe === true;
-
-  const textoPlano = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
-
   // ✅ Permitir solo un mensaje de prueba tipo TODO_OK si es del bot
-  if (esFromMe) {
-    if (textoPlano === 'TODO_OK') {
-      console.log("🟢 Mensaje TODO_OK recibido, marcando ping como OK.");
-      autoReporter.marcarPingOK();
-    } else {
-      // ⛔️ Ignorar todo lo demás que venga del propio bot
-      return;
-    }
+if (!msg.message) return;
+
+// ✅ Permitir solo un fromMe específico
+if (msg.key.fromMe) {
+  if (
+    msg.message?.conversation === 'TODO_OK' || 
+    msg.message?.extendedTextMessage?.text === 'TODO_OK'
+  ) {
+    console.log("🟢 Mensaje TODO_OK recibido, marcando ping como OK.");
+    autoReporter.marcarPingOK();
   }
+
+  return; // ← cortamos toda respuesta automática a fromMe
+}
+
 
   // 👤 Mensaje real de un usuario
   const sender = msg.key.remoteJid;
