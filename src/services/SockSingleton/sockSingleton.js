@@ -22,6 +22,7 @@ class SockSingleton {
 
                 const msg = message.messages[0];
 
+                console.log(msg)
   
                 // ✅ Permitir solo un fromMe específico
                 if (msg.key.fromMe && (
@@ -34,7 +35,7 @@ class SockSingleton {
                 }
 
 
-                
+
                 if (!msg.message || msg.key.fromMe) return;
 
                 const sender = msg.key.remoteJid;
