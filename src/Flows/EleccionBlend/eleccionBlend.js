@@ -1,10 +1,11 @@
 const FlowManager = require("../../FlowControl/FlowManager");
 const MostrarOfertaGenerada = require('../../Utiles/Funciones/P-acticoConcentracion/MostrarOfertaGenerada');
+const iterarNegociacion = require("../reNegociarPrecio/Steps/iterarNegociacion");
 
 module.exports = async function eleccionBlend(userId, data, sock) {
     const seleccion = parseInt(data);
     const flowData = FlowManager.userFlows[userId]?.flowData;
-    const { flow } = flowData;
+    const { flow, IsReg } = flowData;
     const productosBlend = flowData.productosBlend;
 
     console.log("FLOW DATA EN ELECCION BLEND.");
@@ -34,6 +35,17 @@ module.exports = async function eleccionBlend(userId, data, sock) {
     await sock.sendMessage(userId, {
         text: `✅ Seleccionaste Principio activo: *${productoSeleccionado.principio_activo.nombre}*`,
     });
+    console.log("✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅✅");
+    console.log(flow);
 
+    if (IsReg) 
+        {
+        await sock.sendMessage(userId, { text: "🤝*¡Aqui tenemos un nuevo trato para ti!*", });
+        await FlowManager.setFlow(userId, flow, "iterarNegociacion", {...flowData, productoBlendSeleccionado: productoSeleccionado,});
+        await iterarNegociacion(userId, data, sock);
+        return;
+    }else
+        {
     await MostrarOfertaGenerada(userId, sock);
-};
+    }
+}

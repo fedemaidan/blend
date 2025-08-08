@@ -16,7 +16,7 @@ module.exports = async function SeleccionarConcentracionPago(userId, data, sock)
 
     const nombrePrincipio = principiopago.principio_activo.nombre;
 
-    const msg = `✅ Has seleccionado el principio activo *${nombrePrincipio}* con una concentración de *${(seleccion.concentracion * 100).toFixed(2)}%*.\n\n💲 ¿En cuánto valúas tu producto por unidad? Por favor, indicá el precio en dólares.`;
+    const msg = `✅ Has seleccionado el principio activo *${nombrePrincipio}* con una concentración de *${(seleccion.concentracion * 100).toFixed(2)}%*.\n\n💲-¿Cuál es el precio de tu agroquimico por unidad (litro, kilo, gramo)? Por favor, indicá el precio en dólares.`;
 
     await sock.sendMessage(userId, { text: msg });
 

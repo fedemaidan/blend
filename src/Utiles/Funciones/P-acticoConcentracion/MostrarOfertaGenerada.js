@@ -52,11 +52,11 @@ module.exports = async function MostrarOfertaGenerada(userId, sock) {
       ? "🧾 *Productos que recibirás:*\n"
       : "🧾 *Productos que entregaremos:*\n",
     aporte: isCompra
-      ? "💰 *Lo que tú aportarás como método de pago:*"
-      : "💰 *nos ahs vendido:*",
+      ? "💰 *Lo que te compramos en parte de pago:*"
+      : "💰 *Nos has vendido en parte de pago:*",
     diferencia: isCompra
-      ? "📉 *Diferencia neta:*"
-      : "📈 *Diferencia neta:*",
+      ? "📉 *Más adelante arreglamos la diferencia de:*"
+      : "📈 *Más adelante arreglamos la diferencia de:*",
     pregunta: isCompra
       ? "🤝 ¿Querés confirmar esta compra?"
       : "🤝 ¿Querés aceptar esta propuesta de venta?"
@@ -76,21 +76,21 @@ module.exports = async function MostrarOfertaGenerada(userId, sock) {
     msg += `🔹 *${principio}*\n`;
     msg += `   • Concentración: ${concentracion.toFixed(2)}%\n`;
     msg += `   • Cantidad: ${cantidad} unidades\n`;
-    msg += `   • Precio unitario: $${precio}\n`;
-    msg += `   • Valor total: $${total.toFixed(2)}\n\n`;
+    msg += `   • Precio unitario: USD ${precio.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+    msg += `   • Valor total: USD ${total.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n\n`;
   }
 
   msg += `${etiquetas.aporte}\n`;
   msg += `🔹 *${aporte.nombre_principio}*\n`;
   msg += `   • Concentración: ${(aporte.concentracion * 100).toFixed(2)}%\n`;
   msg += `   • Cantidad: ${aporte.cantidad} unidades\n`;
-  msg += `   • Precio negociado: $${aporte.precio_unitario}\n`;
-  msg += `   • Valor total aportado: $${resumen.valor_total_aportado.toFixed(2)}\n\n`;
+  msg += `   • Precio negociado: USD ${aporte.precio_unitario.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+  msg += `   • Valor total aportado: USD ${resumen.valor_total_aportado.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n\n`;
 
-  msg += `📊 *Resumen de la operación:*\n`;
-  msg += `💵 Valor recibido total: $${(resumen.valor_total_deseado + resumen.valor_total_blend).toFixed(2)}\n`;
-  msg += `💸 Valor aportado: $${resumen.valor_total_aportado.toFixed(2)}\n`;
-  msg += `${etiquetas.diferencia} $${Math.abs(resumen.resultado_final).toFixed(2)}\n`;
+  msg += `📊 *En resumen:*\n`;
+  msg += `💵 Te envíaremos mercadería por un total de:  USD ${(resumen.valor_total_deseado + resumen.valor_total_blend).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+  msg += `💸 Vos nos despachas por un total de: USD ${resumen.valor_total_aportado.toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
+  msg += `${etiquetas.diferencia} USD ${Math.abs(resumen.resultado_final).toLocaleString('en-US', { minimumFractionDigits: 2 })}\n`;
 
   msg += `\n\n${etiquetas.pregunta}\n\n1️⃣ Sí\n2️⃣ No`;
 
@@ -98,6 +98,7 @@ module.exports = async function MostrarOfertaGenerada(userId, sock) {
 
   await FlowManager.setFlow(userId, flow, "AceptarOferta", {
     ...flowData,
-    oferta
+    oferta,
+    tipoOferta: "AGRO"
   });
 };

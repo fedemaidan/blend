@@ -1,7 +1,7 @@
 const FlowManager = require('../../../../FlowControl/FlowManager');
 const opcionMetodoPago = require('../../../../Utiles/Chatgpt/opcionMetodoPago');
 const { getPrincipiosActivosDisponibles } = require('../../../../Utiles/Funciones/P-acticoConcentracion/obtenerPrincipio');
-
+const MostrarOfertaEfectivo = require('../../../../Utiles/Funciones/P-acticoConcentracion/MostratOfertaGeneradaEfete');
 module.exports = async function eleccionMetodo(userId, data, sock) {
     const flowData = FlowManager.userFlows[userId]?.flowData;
 
